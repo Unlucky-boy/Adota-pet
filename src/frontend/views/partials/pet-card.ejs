@@ -1,0 +1,38 @@
+<a href="/pets/<%= pet.id %>" class="pet-card" data-species="<%= pet.species %>">
+  <div class="pet-card__image">
+    <img src="<%= pet.image_url || '/img/pets/default.jpg' %>" alt="<%= pet.name %>" loading="lazy"
+         onerror="this.src='/img/pets/default.jpg'">
+    <span class="pet-card__badge pet-card__badge--<%= pet.species %>">
+      <%= pet.species === 'dog' ? '🐶 Cachorro' : pet.species === 'cat' ? '🐱 Gato' : '🐾 Outro' %>
+    </span>
+  </div>
+  <div class="pet-card__info">
+    <h3 class="pet-card__name"><%= pet.name %></h3>
+    <div class="pet-card__meta">
+      <span><%= pet.breed || 'SRD' %></span>
+      <span>•</span>
+      <span>
+        <% if (pet.age_months) { %>
+          <% if (pet.age_months >= 12) { %>
+            <%= Math.floor(pet.age_months / 12) %> ano(s)
+          <% } else { %>
+            <%= pet.age_months %> meses
+          <% } %>
+        <% } else { %>
+          Idade desconhecida
+        <% } %>
+      </span>
+    </div>
+    <div class="pet-card__tags">
+      <% if (pet.vaccinated) { %>
+        <span class="tag tag--green">✓ Vacinado</span>
+      <% } %>
+      <% if (pet.neutered) { %>
+        <span class="tag tag--blue">✓ Castrado</span>
+      <% } %>
+      <span class="tag tag--orange">
+        <%= pet.size === 'small' ? 'Pequeno' : pet.size === 'medium' ? 'Médio' : 'Grande' %>
+      </span>
+    </div>
+  </div>
+</a>

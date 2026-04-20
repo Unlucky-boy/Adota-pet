@@ -1,0 +1,91 @@
+<%- include('./layout-header') %>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="hero__content">
+      <h1 class="hero__title">Encontre seu novo <span class="text-gradient">companheiro</span></h1>
+      <p class="hero__subtitle">Dê uma segunda chance a quem só quer te amar. Conheça os pets disponíveis para adoção na ONG Love Patinhas.</p>
+      <div class="hero__actions">
+        <a href="/pets" class="btn btn--primary btn--lg">Ver Pets Disponíveis</a>
+        <a href="#destaques" class="btn btn--outline btn--lg">Conheça Nossos Pets</a>
+      </div>
+      <div class="hero__stats">
+        <div class="hero__stat">
+          <span class="hero__stat-number">50+</span>
+          <span class="hero__stat-label">Pets adotados</span>
+        </div>
+        <div class="hero__stat">
+          <span class="hero__stat-number">30+</span>
+          <span class="hero__stat-label">Pets disponíveis</span>
+        </div>
+        <div class="hero__stat">
+          <span class="hero__stat-number">100%</span>
+          <span class="hero__stat-label">Amor garantido</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero__illustration">
+      <div class="hero__blob"></div>
+      <span class="hero__emoji">🐶🐱</span>
+    </div>
+  </div>
+</section>
+
+<!-- Como Funciona -->
+<section class="how-it-works">
+  <div class="container">
+    <h2 class="section-title">Como funciona a adoção?</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-card__number">1</div>
+        <div class="step-card__icon">🔍</div>
+        <h3>Escolha</h3>
+        <p>Navegue pela lista de pets e encontre aquele que combina com você.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-card__number">2</div>
+        <div class="step-card__icon">📋</div>
+        <h3>Solicite</h3>
+        <p>Preencha o formulário de adoção com seus dados e uma mensagem para a ONG.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-card__number">3</div>
+        <div class="step-card__icon">🤝</div>
+        <h3>Conheça</h3>
+        <p>A ONG entra em contato para agendar uma visita e conhecer o pet pessoalmente.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-card__number">4</div>
+        <div class="step-card__icon">🏠</div>
+        <h3>Adote</h3>
+        <p>Após aprovação, leve seu novo companheiro para casa com todo amor!</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pets em Destaque -->
+<section class="featured-pets" id="destaques">
+  <div class="container">
+    <h2 class="section-title">Pets em destaque</h2>
+    <p class="section-subtitle">Conheça alguns dos nossos pets que estão esperando por um lar</p>
+    <% if (pets.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon">🐾</span>
+        <p>Nenhum pet disponível no momento. Volte em breve!</p>
+      </div>
+    <% } else { %>
+      <div class="pets-grid">
+        <% pets.forEach(function(pet) { %>
+          <%- include('./partials/pet-card', { pet: pet }) %>
+        <% }); %>
+      </div>
+      <div class="text-center mt-3">
+        <a href="/pets" class="btn btn--primary btn--lg">Ver Todos os Pets →</a>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('./layout-footer') %>

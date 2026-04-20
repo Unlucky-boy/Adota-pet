@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Adota Pet — Plataforma de adoção de animais da ONG Love Patinhas">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="container navbar__inner">
+      <a href="/" class="navbar__brand">
+        <span class="navbar__icon">🐾</span>
+        <span class="navbar__title">Adota Pet</span>
+      </a>
+      <ul class="navbar__links">
+        <li><a href="/">Início</a></li>
+        <li><a href="/pets">Adotar</a></li>
+        <% if (user) { %>
+          <li><a href="/admin/pets">Gerenciar Pets</a></li>
+          <li><a href="/admin/adoptions">Adoções</a></li>
+          <li><a href="/logout" class="btn btn--outline btn--sm">Sair</a></li>
+        <% } else { %>
+          <li><a href="/login" class="btn btn--primary btn--sm">Área ONG</a></li>
+        <% } %>
+      </ul>
+      <button class="navbar__toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Flash messages -->
+  <% if (success) { %>
+    <div class="alert alert--success">
+      <span>✅</span> <%= success %>
+      <button class="alert__close" onclick="this.parentElement.remove()">✕</button>
+    </div>
+  <% } %>
+  <% if (error) { %>
+    <div class="alert alert--error">
+      <span>⚠️</span> <%= error %>
+      <button class="alert__close" onclick="this.parentElement.remove()">✕</button>
+    </div>
+  <% } %>
+
+  <main>

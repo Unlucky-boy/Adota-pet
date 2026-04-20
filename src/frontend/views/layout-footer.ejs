@@ -1,0 +1,47 @@
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__col">
+          <h3>🐾 Adota Pet</h3>
+          <p>Plataforma de adoção responsável da ONG Love Patinhas.</p>
+        </div>
+        <div class="footer__col">
+          <h4>Links</h4>
+          <ul>
+            <li><a href="/">Início</a></li>
+            <li><a href="/pets">Adotar</a></li>
+            <li><a href="/login">Área ONG</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Contato</h4>
+          <p>📧 contato@lovepatinhas.org</p>
+          <p>📱 (82) 99999-9999</p>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>&copy; 2026 Adota Pet — ONG Love Patinhas. Projeto acadêmico ACE6.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile nav toggle
+    const navToggle = document.getElementById('navToggle');
+    if (navToggle) {
+      navToggle.addEventListener('click', function() {
+        document.querySelector('.navbar__links').classList.toggle('navbar__links--open');
+        this.classList.toggle('navbar__toggle--active');
+      });
+    }
+
+    // Auto-dismiss alerts
+    document.querySelectorAll('.alert').forEach(function(el) {
+      setTimeout(function() { el.remove(); }, 5000);
+    });
+  </script>
+</body>
+</html>

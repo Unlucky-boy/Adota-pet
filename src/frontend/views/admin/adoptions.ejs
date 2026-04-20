@@ -1,0 +1,83 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <div class="admin-header">
+      <h1>📋 Solicitações de Adoção</h1>
+    </div>
+
+    <% if (adoptions.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon">📭</span>
+        <h3>Nenhuma solicitação recebida</h3>
+        <p>Quando alguém solicitar a adoção de um pet, aparecerá aqui.</p>
+      </div>
+    <% } else { %>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Pet</th>
+              <th>Solicitante</th>
+              <th>Contato</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% adoptions.forEach(function(adoption) { %>
+              <tr>
+                <td>#<%= adoption.id %></td>
+                <td>
+                  <strong><%= adoption.pet_name %></strong>
+                  <br><small><%= adoption.pet_species === 'dog' ? '🐶' : '🐱' %></small>
+                </td>
+                <td>
+                  <strong><%= adoption.adopter_name %></strong>
+                  <% if (adoption.message) { %>
+                    <br><small title="<%= adoption.message %>">💬 "<%= adoption.message.substring(0, 50) %><%= adoption.message.length > 50 ? '...' : '' %>"</small>
+                  <% } %>
+                </td>
+                <td>
+                  📧 <%= adoption.adopter_email %>
+                  <% if (adoption.adopter_phone) { %>
+                    <br>📱 <%= adoption.adopter_phone %>
+                  <% } %>
+                </td>
+                <td><%= new Date(adoption.created_at).toLocaleDateString('pt-BR') %></td>
+                <td>
+                  <span class="status-badge status-badge--<%= adoption.status %>">
+                    <%= adoption.status === 'pending' ? '⏳ Pendente' : adoption.status === 'approved' ? '✅ Aprovada' : '❌ Rejeitada' %>
+                  </span>
+                </td>
+                <td class="table__actions">
+                  <% if (adoption.status === 'pending') { %>
+                    <form method="POST" action="/admin/adoptions/<%= adoption.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="approved">
+                      <button type="submit" class="btn btn--success btn--sm"
+                              onclick="return confirm('Aprovar esta solicitação?')">✓ Aprovar</button>
+                    </form>
+                    <form method="POST" action="/admin/adoptions/<%= adoption.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="rejected">
+                      <button type="submit" class="btn btn--danger btn--sm"
+                              onclick="return confirm('Rejeitar esta solicitação?')">✕ Rejeitar</button>
+                    </form>
+                  <% } else { %>
+                    <form method="POST" action="/admin/adoptions/<%= adoption.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="pending">
+                      <button type="submit" class="btn btn--outline btn--sm">↩ Voltar p/ Pendente</button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

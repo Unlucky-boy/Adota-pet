@@ -1,0 +1,313 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <div class="admin-header">
+      <h1>🐾 Gerenciar Pets</h1>
+      <button class="btn btn--primary" onclick="openCreateModal()">+ Cadastrar Pet</button>
+    </div>
+
+    <% if (pets.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon">📋</span>
+        <h3>Nenhum pet cadastrado</h3>
+        <p>Clique em "Cadastrar Pet" para adicionar o primeiro.</p>
+      </div>
+    <% } else { %>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Espécie</th>
+              <th>Raça</th>
+              <th>Porte</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% pets.forEach(function(pet) { %>
+              <tr>
+                <td>#<%= pet.id %></td>
+                <td><strong><%= pet.name %></strong></td>
+                <td>
+                  <%= pet.species === 'dog' ? '🐶 Cachorro' : pet.species === 'cat' ? '🐱 Gato' : '🐾 Outro' %>
+                </td>
+                <td><%= pet.breed || 'SRD' %></td>
+                <td><%= pet.size === 'small' ? 'Pequeno' : pet.size === 'medium' ? 'Médio' : 'Grande' %></td>
+                <td>
+                  <span class="status-badge status-badge--<%= pet.status %>">
+                    <%= pet.status === 'available' ? 'Disponível' : pet.status === 'adopted' ? 'Adotado' : 'Reservado' %>
+                  </span>
+                </td>
+                <td class="table__actions">
+                  <button class="btn btn--outline btn--sm" onclick="openEditModal(<%= pet.id %>)">Editar</button>
+                  <button class="btn btn--danger btn--sm" onclick="openDeleteModal(<%= pet.id %>, '<%= pet.name %>')">Remover</button>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- ==================== MODAL: CADASTRAR PET ==================== -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal__header">
+      <h2>🐾 Cadastrar Novo Pet</h2>
+      <button class="modal__close" onclick="closeModal('createModal')">&times;</button>
+    </div>
+    <div class="modal__body">
+      <form class="form" method="POST" action="/admin/pets" enctype="multipart/form-data">
+        <div class="form__row">
+          <div class="form__group">
+            <label for="create-name">Nome do pet *</label>
+            <input type="text" id="create-name" name="name" required placeholder="Ex: Thor">
+          </div>
+          <div class="form__group">
+            <label for="create-species">Espécie *</label>
+            <select id="create-species" name="species" required>
+              <option value="">Selecione</option>
+              <option value="dog">🐶 Cachorro</option>
+              <option value="cat">🐱 Gato</option>
+              <option value="other">🐾 Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="form__row">
+          <div class="form__group">
+            <label for="create-breed">Raça</label>
+            <input type="text" id="create-breed" name="breed" placeholder="Ex: Vira-lata">
+          </div>
+          <div class="form__group">
+            <label for="create-age">Idade (meses)</label>
+            <input type="number" id="create-age" name="age_months" min="0" placeholder="Ex: 24">
+          </div>
+        </div>
+        <div class="form__row">
+          <div class="form__group">
+            <label for="create-size">Porte *</label>
+            <select id="create-size" name="size" required>
+              <option value="">Selecione</option>
+              <option value="small">Pequeno</option>
+              <option value="medium">Médio</option>
+              <option value="large">Grande</option>
+            </select>
+          </div>
+          <div class="form__group">
+            <label for="create-gender">Gênero *</label>
+            <select id="create-gender" name="gender" required>
+              <option value="">Selecione</option>
+              <option value="male">Macho</option>
+              <option value="female">Fêmea</option>
+            </select>
+          </div>
+        </div>
+        <div class="form__group">
+          <label for="create-description">Descrição</label>
+          <textarea id="create-description" name="description" rows="3" placeholder="Personalidade, história do pet..."></textarea>
+        </div>
+        <div class="form__group">
+          <label for="create-image">Foto do pet</label>
+          <input type="file" id="create-image" name="image" accept="image/jpeg,image/png,image/webp">
+        </div>
+        <div class="form__row">
+          <div class="form__group form__group--checkbox">
+            <label><input type="checkbox" name="vaccinated"> Vacinado</label>
+          </div>
+          <div class="form__group form__group--checkbox">
+            <label><input type="checkbox" name="neutered"> Castrado</label>
+          </div>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--outline" onclick="closeModal('createModal')">Cancelar</button>
+          <button type="submit" class="btn btn--primary">🐾 Cadastrar Pet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: EDITAR PET ==================== -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal__header">
+      <h2>✏️ Editar Pet</h2>
+      <button class="modal__close" onclick="closeModal('editModal')">&times;</button>
+    </div>
+    <div class="modal__body">
+      <form class="form" id="editForm" method="POST" action="" enctype="multipart/form-data">
+        <div class="form__row">
+          <div class="form__group">
+            <label for="edit-name">Nome do pet *</label>
+            <input type="text" id="edit-name" name="name" required>
+          </div>
+          <div class="form__group">
+            <label for="edit-species">Espécie *</label>
+            <select id="edit-species" name="species" required>
+              <option value="dog">🐶 Cachorro</option>
+              <option value="cat">🐱 Gato</option>
+              <option value="other">🐾 Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="form__row">
+          <div class="form__group">
+            <label for="edit-breed">Raça</label>
+            <input type="text" id="edit-breed" name="breed">
+          </div>
+          <div class="form__group">
+            <label for="edit-age">Idade (meses)</label>
+            <input type="number" id="edit-age" name="age_months" min="0">
+          </div>
+        </div>
+        <div class="form__row">
+          <div class="form__group">
+            <label for="edit-size">Porte *</label>
+            <select id="edit-size" name="size" required>
+              <option value="small">Pequeno</option>
+              <option value="medium">Médio</option>
+              <option value="large">Grande</option>
+            </select>
+          </div>
+          <div class="form__group">
+            <label for="edit-gender">Gênero *</label>
+            <select id="edit-gender" name="gender" required>
+              <option value="male">Macho</option>
+              <option value="female">Fêmea</option>
+            </select>
+          </div>
+        </div>
+        <div class="form__group">
+          <label for="edit-description">Descrição</label>
+          <textarea id="edit-description" name="description" rows="3"></textarea>
+        </div>
+        <div class="form__group">
+          <label for="edit-image">Nova foto (opcional)</label>
+          <input type="file" id="edit-image" name="image" accept="image/jpeg,image/png,image/webp">
+          <p class="form__hint" id="edit-image-hint"></p>
+        </div>
+        <div class="form__row">
+          <div class="form__group form__group--checkbox">
+            <label><input type="checkbox" id="edit-vaccinated" name="vaccinated"> Vacinado</label>
+          </div>
+          <div class="form__group form__group--checkbox">
+            <label><input type="checkbox" id="edit-neutered" name="neutered"> Castrado</label>
+          </div>
+        </div>
+        <div class="form__group">
+          <label for="edit-status">Status</label>
+          <select id="edit-status" name="status">
+            <option value="available">Disponível</option>
+            <option value="reserved">Reservado</option>
+            <option value="adopted">Adotado</option>
+          </select>
+        </div>
+        <div class="modal__footer">
+          <button type="button" class="btn btn--outline" onclick="closeModal('editModal')">Cancelar</button>
+          <button type="submit" class="btn btn--primary">💾 Salvar Alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL: CONFIRMAR EXCLUSÃO ==================== -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal modal--sm">
+    <div class="modal__header">
+      <h2>⚠️ Confirmar Exclusão</h2>
+      <button class="modal__close" onclick="closeModal('deleteModal')">&times;</button>
+    </div>
+    <div class="modal__body">
+      <p class="modal__message">Tem certeza que deseja remover o pet <strong id="delete-pet-name"></strong>?</p>
+      <p class="modal__warning">Esta ação não pode ser desfeita.</p>
+      <form id="deleteForm" method="POST" action="">
+        <div class="modal__footer">
+          <button type="button" class="btn btn--outline" onclick="closeModal('deleteModal')">Cancelar</button>
+          <button type="submit" class="btn btn--danger">🗑️ Sim, Remover</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // === MODAL CONTROLS ===
+  function openModal(id) {
+    document.getElementById(id).classList.add('modal-overlay--active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('modal-overlay--active');
+    document.body.style.overflow = '';
+  }
+
+  // Fechar modal clicando no overlay
+  document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) {
+        overlay.classList.remove('modal-overlay--active');
+        document.body.style.overflow = '';
+      }
+    });
+  });
+
+  // Fechar modal com ESC
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.modal-overlay--active').forEach(function(overlay) {
+        overlay.classList.remove('modal-overlay--active');
+      });
+      document.body.style.overflow = '';
+    }
+  });
+
+  // === CRIAR ===
+  function openCreateModal() {
+    document.querySelector('#createModal form').reset();
+    openModal('createModal');
+  }
+
+  // === EDITAR ===
+  async function openEditModal(petId) {
+    try {
+      const res = await fetch('/api/pets/' + petId);
+      if (!res.ok) throw new Error('Erro ao buscar pet');
+      const pet = await res.json();
+
+      document.getElementById('editForm').action = '/admin/pets/' + pet.id;
+      document.getElementById('edit-name').value = pet.name || '';
+      document.getElementById('edit-species').value = pet.species || '';
+      document.getElementById('edit-breed').value = pet.breed || '';
+      document.getElementById('edit-age').value = pet.age_months || '';
+      document.getElementById('edit-size').value = pet.size || '';
+      document.getElementById('edit-gender').value = pet.gender || '';
+      document.getElementById('edit-description').value = pet.description || '';
+      document.getElementById('edit-vaccinated').checked = pet.vaccinated;
+      document.getElementById('edit-neutered').checked = pet.neutered;
+      document.getElementById('edit-status').value = pet.status || 'available';
+      document.getElementById('edit-image-hint').textContent = pet.image_url ? 'Foto atual: ' + pet.image_url : '';
+
+      openModal('editModal');
+    } catch (err) {
+      alert('Erro ao carregar dados do pet. Tente novamente.');
+      console.error(err);
+    }
+  }
+
+  // === DELETAR ===
+  function openDeleteModal(petId, petName) {
+    document.getElementById('delete-pet-name').textContent = petName;
+    document.getElementById('deleteForm').action = '/admin/pets/' + petId + '/delete';
+    openModal('deleteModal');
+  }
+</script>
+
+<%- include('../layout-footer') %>

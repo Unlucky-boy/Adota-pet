@@ -1,0 +1,62 @@
+<%- include('../layout-header') %>
+
+<section class="page-header">
+  <div class="container">
+    <h1>Pets Disponíveis para Adoção</h1>
+    <p>Encontre o companheiro perfeito para você</p>
+  </div>
+</section>
+
+<section class="pets-section">
+  <div class="container">
+    <!-- Filtros -->
+    <form class="filters" method="GET" action="/pets">
+      <div class="filters__group">
+        <label for="species">Espécie</label>
+        <select name="species" id="species">
+          <option value="">Todas</option>
+          <option value="dog" <%= filters.species === 'dog' ? 'selected' : '' %>>🐶 Cachorro</option>
+          <option value="cat" <%= filters.species === 'cat' ? 'selected' : '' %>>🐱 Gato</option>
+          <option value="other" <%= filters.species === 'other' ? 'selected' : '' %>>🐾 Outro</option>
+        </select>
+      </div>
+      <div class="filters__group">
+        <label for="size">Porte</label>
+        <select name="size" id="size">
+          <option value="">Todos</option>
+          <option value="small" <%= filters.size === 'small' ? 'selected' : '' %>>Pequeno</option>
+          <option value="medium" <%= filters.size === 'medium' ? 'selected' : '' %>>Médio</option>
+          <option value="large" <%= filters.size === 'large' ? 'selected' : '' %>>Grande</option>
+        </select>
+      </div>
+      <div class="filters__group">
+        <label for="gender">Gênero</label>
+        <select name="gender" id="gender">
+          <option value="">Todos</option>
+          <option value="male" <%= filters.gender === 'male' ? 'selected' : '' %>>Macho</option>
+          <option value="female" <%= filters.gender === 'female' ? 'selected' : '' %>>Fêmea</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn--primary">Filtrar</button>
+      <a href="/pets" class="btn btn--outline">Limpar</a>
+    </form>
+
+    <!-- Resultados -->
+    <% if (pets.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon">🔍</span>
+        <h3>Nenhum pet encontrado</h3>
+        <p>Tente ajustar os filtros ou volte mais tarde.</p>
+      </div>
+    <% } else { %>
+      <p class="results-count"><strong><%= pets.length %></strong> pet(s) encontrado(s)</p>
+      <div class="pets-grid">
+        <% pets.forEach(function(pet) { %>
+          <%- include('../partials/pet-card', { pet: pet }) %>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

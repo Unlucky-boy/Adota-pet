@@ -1,0 +1,120 @@
+<%- include('../layout-header') %>
+
+<section class="pet-detail">
+  <div class="container">
+    <a href="/pets" class="back-link">← Voltar para a lista</a>
+
+    <div class="pet-detail__grid">
+      <div class="pet-detail__image">
+        <img src="<%= pet.image_url || '/img/pets/default.jpg' %>" alt="<%= pet.name %>"
+             onerror="this.src='/img/pets/default.jpg'">
+        <% if (pet.status !== 'available') { %>
+          <div class="pet-detail__overlay">
+            <span><%= pet.status === 'adopted' ? 'Adotado!' : 'Reservado' %></span>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="pet-detail__info">
+        <h1><%= pet.name %></h1>
+        <div class="pet-detail__meta">
+          <span class="pet-detail__species">
+            <%= pet.species === 'dog' ? '🐶 Cachorro' : pet.species === 'cat' ? '🐱 Gato' : '🐾 Outro' %>
+          </span>
+          <span><%= pet.breed || 'SRD' %></span>
+          <span>
+            <%= pet.gender === 'male' ? '♂ Macho' : '♀ Fêmea' %>
+          </span>
+        </div>
+
+        <div class="pet-detail__attributes">
+          <div class="attribute">
+            <span class="attribute__label">Idade</span>
+            <span class="attribute__value">
+              <% if (pet.age_months) { %>
+                <% if (pet.age_months >= 12) { %>
+                  <%= Math.floor(pet.age_months / 12) %> ano(s)
+                <% } else { %>
+                  <%= pet.age_months %> meses
+                <% } %>
+              <% } else { %>
+                Desconhecida
+              <% } %>
+            </span>
+          </div>
+          <div class="attribute">
+            <span class="attribute__label">Porte</span>
+            <span class="attribute__value">
+              <%= pet.size === 'small' ? 'Pequeno' : pet.size === 'medium' ? 'Médio' : 'Grande' %>
+            </span>
+          </div>
+          <div class="attribute">
+            <span class="attribute__label">Vacinado</span>
+            <span class="attribute__value"><%= pet.vaccinated ? '✅ Sim' : '❌ Não' %></span>
+          </div>
+          <div class="attribute">
+            <span class="attribute__label">Castrado</span>
+            <span class="attribute__value"><%= pet.neutered ? '✅ Sim' : '❌ Não' %></span>
+          </div>
+        </div>
+
+        <% if (pet.description) { %>
+          <div class="pet-detail__description">
+            <h3>Sobre <%= pet.name %></h3>
+            <p><%= pet.description %></p>
+          </div>
+        <% } %>
+
+        <% if (pet.status === 'available') { %>
+          <div class="pet-detail__cta">
+            <h3>Quer adotar <%= pet.name %>?</h3>
+            <p>Preencha o formulário abaixo e entraremos em contato!</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <% if (pet.status === 'available') { %>
+    <!-- Formulário de Adoção -->
+    <div class="adoption-form-section" id="adotar">
+      <h2>Formulário de Adoção</h2>
+      <form class="form" method="POST" action="/adoptions">
+        <input type="hidden" name="pet_id" value="<%= pet.id %>">
+
+        <div class="form__row">
+          <div class="form__group">
+            <label for="adopter_name">Nome completo *</label>
+            <input type="text" id="adopter_name" name="adopter_name" required placeholder="Seu nome completo">
+          </div>
+          <div class="form__group">
+            <label for="adopter_email">E-mail *</label>
+            <input type="email" id="adopter_email" name="adopter_email" required placeholder="seu@email.com">
+          </div>
+        </div>
+
+        <div class="form__row">
+          <div class="form__group">
+            <label for="adopter_phone">Telefone</label>
+            <input type="tel" id="adopter_phone" name="adopter_phone" placeholder="(82) 99999-9999">
+          </div>
+          <div class="form__group">
+            <label for="adopter_address">Endereço</label>
+            <input type="text" id="adopter_address" name="adopter_address" placeholder="Seu endereço completo">
+          </div>
+        </div>
+
+        <div class="form__group">
+          <label for="message">Por que você quer adotar <%= pet.name %>?</label>
+          <textarea id="message" name="message" rows="4" placeholder="Conte um pouco sobre você e por que deseja adotar este pet..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--lg btn--full">
+          🐾 Enviar Solicitação de Adoção
+        </button>
+      </form>
+    </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

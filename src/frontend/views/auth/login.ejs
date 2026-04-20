@@ -1,0 +1,29 @@
+<%- include('../layout-header') %>
+
+<section class="auth-section">
+  <div class="container">
+    <div class="auth-card">
+      <div class="auth-card__header">
+        <span class="auth-card__icon">🐾</span>
+        <h1>Área da ONG</h1>
+        <p>Acesse o painel de gerenciamento</p>
+      </div>
+      <form class="form" method="POST" action="/login">
+        <div class="form__group">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" required placeholder="admin@lovep.com" autocomplete="email">
+        </div>
+        <div class="form__group">
+          <label for="password">Senha</label>
+          <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn--primary btn--lg btn--full">Entrar</button>
+      </form>
+      <div class="auth-card__footer">
+        <a href="/">← Voltar para o site</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

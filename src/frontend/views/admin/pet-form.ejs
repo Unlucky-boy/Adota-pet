@@ -1,0 +1,109 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <a href="/admin/pets" class="back-link">← Voltar para lista</a>
+    <h1><%= pet ? 'Editar ' + pet.name : 'Cadastrar Novo Pet' %></h1>
+
+    <form class="form form--card" method="POST"
+          action="<%= pet ? '/admin/pets/' + pet.id : '/admin/pets' %>"
+          enctype="multipart/form-data">
+
+      <div class="form__row">
+        <div class="form__group">
+          <label for="name">Nome do pet *</label>
+          <input type="text" id="name" name="name" required
+                 value="<%= pet ? pet.name : '' %>" placeholder="Ex: Thor">
+        </div>
+        <div class="form__group">
+          <label for="species">Espécie *</label>
+          <select id="species" name="species" required>
+            <option value="">Selecione</option>
+            <option value="dog" <%= pet && pet.species === 'dog' ? 'selected' : '' %>>🐶 Cachorro</option>
+            <option value="cat" <%= pet && pet.species === 'cat' ? 'selected' : '' %>>🐱 Gato</option>
+            <option value="other" <%= pet && pet.species === 'other' ? 'selected' : '' %>>🐾 Outro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form__row">
+        <div class="form__group">
+          <label for="breed">Raça</label>
+          <input type="text" id="breed" name="breed"
+                 value="<%= pet ? pet.breed || '' : '' %>" placeholder="Ex: Vira-lata">
+        </div>
+        <div class="form__group">
+          <label for="age_months">Idade (meses)</label>
+          <input type="number" id="age_months" name="age_months" min="0"
+                 value="<%= pet ? pet.age_months || '' : '' %>" placeholder="Ex: 24">
+        </div>
+      </div>
+
+      <div class="form__row">
+        <div class="form__group">
+          <label for="size">Porte *</label>
+          <select id="size" name="size" required>
+            <option value="">Selecione</option>
+            <option value="small" <%= pet && pet.size === 'small' ? 'selected' : '' %>>Pequeno</option>
+            <option value="medium" <%= pet && pet.size === 'medium' ? 'selected' : '' %>>Médio</option>
+            <option value="large" <%= pet && pet.size === 'large' ? 'selected' : '' %>>Grande</option>
+          </select>
+        </div>
+        <div class="form__group">
+          <label for="gender">Gênero *</label>
+          <select id="gender" name="gender" required>
+            <option value="">Selecione</option>
+            <option value="male" <%= pet && pet.gender === 'male' ? 'selected' : '' %>>Macho</option>
+            <option value="female" <%= pet && pet.gender === 'female' ? 'selected' : '' %>>Fêmea</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form__group">
+        <label for="description">Descrição</label>
+        <textarea id="description" name="description" rows="4"
+                  placeholder="Conte sobre a personalidade e história do pet..."><%= pet ? pet.description || '' : '' %></textarea>
+      </div>
+
+      <div class="form__group">
+        <label for="image">Foto do pet</label>
+        <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
+        <% if (pet && pet.image_url) { %>
+          <p class="form__hint">Foto atual: <%= pet.image_url %></p>
+        <% } %>
+      </div>
+
+      <div class="form__row">
+        <div class="form__group form__group--checkbox">
+          <label>
+            <input type="checkbox" name="vaccinated" <%= pet && pet.vaccinated ? 'checked' : '' %>>
+            Vacinado
+          </label>
+        </div>
+        <div class="form__group form__group--checkbox">
+          <label>
+            <input type="checkbox" name="neutered" <%= pet && pet.neutered ? 'checked' : '' %>>
+            Castrado
+          </label>
+        </div>
+      </div>
+
+      <% if (pet) { %>
+        <div class="form__group">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="available" <%= pet.status === 'available' ? 'selected' : '' %>>Disponível</option>
+            <option value="reserved" <%= pet.status === 'reserved' ? 'selected' : '' %>>Reservado</option>
+            <option value="adopted" <%= pet.status === 'adopted' ? 'selected' : '' %>>Adotado</option>
+          </select>
+        </div>
+      <% } %>
+
+      <button type="submit" class="btn btn--primary btn--lg btn--full">
+        <%= pet ? '💾 Salvar Alterações' : '🐾 Cadastrar Pet' %>
+      </button>
+    </form>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>
