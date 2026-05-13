@@ -56,7 +56,7 @@ cp .env.example .env
 ### 3. Suba o banco de dados
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 > ⏳ Na primeira execução, o Docker cria o banco e roda o `seed.sql` automaticamente, criando as tabelas e inserindo dados de exemplo.
