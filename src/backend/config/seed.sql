@@ -101,7 +101,8 @@ CREATE TABLE IF NOT EXISTS donations (
   donor_email     VARCHAR(150),
   status          VARCHAR(20)   DEFAULT 'completed',
   receipt_code    VARCHAR(50)   UNIQUE NOT NULL,
-  receipt_image   TEXT,
+  receipt_image   BYTEA,
+  receipt_image_mime_type VARCHAR(50),
   created_at      TIMESTAMP     DEFAULT NOW()
 );
 

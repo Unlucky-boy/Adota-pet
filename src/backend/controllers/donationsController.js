@@ -75,21 +75,22 @@ const donationsController = {
       const receiptCode = crypto.randomUUID().split('-')[0].toUpperCase()
         + '-' + Date.now().toString(36).toUpperCase();
 
-      // Capturar imagem do comprovante se enviado (via multer)
-      const receiptImage = req.file ? `/uploads/${req.file.filename}` : null;
+      // Capturar imagem do comprovante se enviado (via multer — memoryStorage)
+      const receiptImageBuffer = req.file ? req.file.buffer : null;
+      const receiptImageMime = req.file ? req.file.mimetype : null;
 
       // Determinar status baseado no método
       // PIX com comprovante = pending_review, sem = pending_payment
       // Card/Boleto = completed (simulado)
       let status = 'completed';
       if (payment_method === 'pix') {
-        status = receiptImage ? 'pending_review' : 'pending_payment';
+        status = receiptImageBuffer ? 'pending_review' : 'pending_payment';
       }
 
       // Inserir doação
       await db.query(
-        `INSERT INTO donations (amount, payment_method, donor_name, donor_email, status, receipt_code, receipt_image)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        `INSERT INTO donations (amount, payment_method, donor_name, donor_email, status, receipt_code, receipt_image, receipt_image_mime_type)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [
           parsedAmount.toFixed(2),
           payment_method,
@@ -97,16 +98,17 @@ const donationsController = {
           donor_email ? donor_email.toLowerCase().trim() : null,
           status,
           receiptCode,
-          receiptImage,
+          receiptImageBuffer,
+          receiptImageMime,
         ]
       );
 
       // Limpar dados do form
       delete req.session.formData;
 
-      const successMsg = payment_method === 'pix' && !receiptImage
+      const successMsg = payment_method === 'pix' && !receiptImageBuffer
         ? 'Doação registrada! Faça a transferência PIX e envie o comprovante.'
-        : payment_method === 'pix' && receiptImage
+        : payment_method === 'pix' && receiptImageBuffer
           ? 'Doação registrada com comprovante! Aguarde a confirmação da ONG.'
           : 'Doação realizada com sucesso! Obrigado pela contribuição!';
 
@@ -129,12 +131,13 @@ const donationsController = {
     }
 
     try {
-      const receiptImage = `/uploads/${req.file.filename}`;
+      const receiptImageBuffer = req.file.buffer;
+      const receiptImageMime = req.file.mimetype;
       const result = await db.query(
-        `UPDATE donations SET receipt_image = $1, status = 'pending_review'
-         WHERE receipt_code = $2 AND payment_method = 'pix'
+        `UPDATE donations SET receipt_image = $1, receipt_image_mime_type = $2, status = 'pending_review'
+         WHERE receipt_code = $3 AND payment_method = 'pix'
          RETURNING id`,
-        [receiptImage, code]
+        [receiptImageBuffer, receiptImageMime, code]
       );
 
       if (result.rows.length === 0) {
@@ -205,6 +208,24 @@ const donationsController = {
         donations: [],
         totalBalance: 0,
       });
+    }
+  },
+
+  // GET /donations/:id/receipt-image — Servir imagem do comprovante armazenada no banco
+  async serveReceiptImage(req, res) {
+    try {
+      const result = await db.query(
+        'SELECT receipt_image, receipt_image_mime_type FROM donations WHERE id = $1',
+        [req.params.id]
+      );
+      if (result.rows.length === 0 || !result.rows[0].receipt_image) {
+        return res.status(404).send('Comprovante não encontrado.');
+      }
+      res.set('Content-Type', result.rows[0].receipt_image_mime_type || 'image/png');
+      res.send(result.rows[0].receipt_image);
+    } catch (err) {
+      console.error('Erro ao servir comprovante:', err);
+      res.status(500).send('Erro interno');
     }
   },
 

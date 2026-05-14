@@ -93,9 +93,9 @@
             <div class="receipt-card__divider"></div>
             <div class="receipt-card__attachment">
               <p class="receipt-card__pix-label">Comprovante Enviado</p>
-              <a href="<%= donation.receipt_image %>" target="_blank" class="btn btn--outline btn--sm">📎 Ver Comprovante</a>
+              <a href="/donations/<%= donation.id %>/receipt-image" target="_blank" class="btn btn--outline btn--sm">📎 Ver Comprovante</a>
             </div>
-          <% } else if (donation.status === 'pending_payment') { %>
+          <% } else { %>
             <div class="receipt-card__divider"></div>
             <div class="receipt-card__upload">
               <p class="receipt-card__pix-label">Enviar Comprovante do PIX</p>

@@ -73,7 +73,7 @@
                 </td>
                 <td>
                   <% if (d.receipt_image) { %>
-                    <a href="<%= d.receipt_image %>" target="_blank" class="btn btn--outline btn--sm">📎 Ver</a>
+                    <a href="/donations/<%= d.id %>/receipt-image" target="_blank" class="btn btn--outline btn--sm">📎 Ver</a>
                   <% } else { %>
                     <span style="color: var(--gray-400);">—</span>
                   <% } %>

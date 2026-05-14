@@ -205,7 +205,7 @@
                   </td>
                   <td style="padding: 1rem;">
                     <% if (d.receipt_image) { %>
-                      <a href="<%= d.receipt_image %>" target="_blank" class="btn btn--outline btn--sm" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">📎 Ver</a>
+                      <a href="/donations/<%= d.id %>/receipt-image" target="_blank" class="btn btn--outline btn--sm" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">📎 Ver</a>
                     <% } else { %>
                       <a href="/donate/receipt/<%= d.receipt_code %>" class="btn btn--outline btn--sm" style="padding: 0.25rem 0.75rem; font-size: 0.8rem; border-color: var(--warning); color: var(--warning);">Enviar</a>
                     <% } %>
