@@ -7,9 +7,18 @@ const donationsController = {
   async donatePage(req, res) {
     try {
       const settings = await settingsController.getAll();
+      
+      let initialFormData = req.session.formData || {};
+      if (!req.session.formData && req.session.adopter) {
+        initialFormData = {
+          donor_name: req.session.adopter.name,
+          donor_email: req.session.adopter.email
+        };
+      }
+
       res.render('donations/form', {
         title: 'Doe Agora — Adota Pet',
-        formData: req.session.formData || {},
+        formData: initialFormData,
         pixKey: settings.pix_key || '',
         projectEmail: settings.project_email || '',
       });
@@ -46,7 +55,7 @@ const donationsController = {
     }
 
     // Validar método de pagamento
-    const validMethods = ['pix', 'card', 'boleto'];
+    const validMethods = ['pix'];
     if (!payment_method || !validMethods.includes(payment_method)) {
       req.session.error = 'Selecione um método de pagamento válido.';
       return res.redirect('/donate');
@@ -178,15 +187,23 @@ const donationsController = {
       const result = await db.query(
         'SELECT * FROM donations ORDER BY created_at DESC'
       );
+      
+      const totalBalanceResult = await db.query(
+        "SELECT SUM(amount) as total FROM donations WHERE status = 'completed'"
+      );
+      const totalBalance = totalBalanceResult.rows[0].total || 0;
+
       res.render('admin/donations', {
         title: 'Gerenciar Doações — Adota Pet',
         donations: result.rows,
+        totalBalance: parseFloat(totalBalance),
       });
     } catch (err) {
       console.error('Erro ao listar doações:', err);
       res.render('admin/donations', {
         title: 'Gerenciar Doações',
         donations: [],
+        totalBalance: 0,
       });
     }
   },

@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS adopters (
   phone       VARCHAR(20)  NOT NULL,
   email       VARCHAR(150) UNIQUE NOT NULL,
   address     TEXT         NOT NULL,
+  password_hash TEXT       NOT NULL,
   created_at  TIMESTAMP    DEFAULT NOW()
 );
 

@@ -31,9 +31,12 @@
           <li><a href="/admin/visits">Visitas</a></li>
           <li><a href="/admin/settings">⚙️</a></li>
           <li><a href="/logout" class="btn btn--outline btn--sm">Sair</a></li>
+        <% } else if (typeof adopter !== 'undefined' && adopter) { %>
+          <li><a href="/dashboard" class="btn btn--primary btn--sm">Meu Painel</a></li>
+          <li><a href="/logout" class="btn btn--outline btn--sm">Sair</a></li>
         <% } else { %>
           <li><a href="/register" class="btn btn--outline btn--sm">Cadastre-se</a></li>
-          <li><a href="/login" class="btn btn--primary btn--sm">Área ONG</a></li>
+          <li><a href="/login" class="btn btn--primary btn--sm">Entrar</a></li>
         <% } %>
       </ul>
       <button class="navbar__toggle" id="navToggle" aria-label="Menu">

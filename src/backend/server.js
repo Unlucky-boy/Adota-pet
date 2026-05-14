@@ -12,6 +12,7 @@ const donationsRoutes = require('./routes/donations');
 const volunteersRoutes = require('./routes/volunteers');
 const visitsRoutes = require('./routes/visits');
 const settingsRoutes = require('./routes/settings');
+const dashboardRoutes = require('./routes/dashboard');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -40,6 +41,7 @@ app.use(session({
 // Global variables for views
 app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
+  res.locals.adopter = req.session.adopter || null;
   res.locals.success = req.session.success || null;
   res.locals.error = req.session.error || null;
   delete req.session.success;
@@ -56,6 +58,7 @@ app.use('/', donationsRoutes);
 app.use('/', volunteersRoutes);
 app.use('/', visitsRoutes);
 app.use('/', settingsRoutes);
+app.use('/dashboard', dashboardRoutes);
 
 // 404
 app.use((req, res) => {

@@ -7,10 +7,22 @@ const petsController = {
       const result = await db.query(
         "SELECT * FROM pets WHERE status = 'available' ORDER BY created_at DESC LIMIT 6"
       );
-      res.render('home', { title: 'Adota Pet — Encontre seu novo companheiro', pets: result.rows });
+      
+      const availablePetsResult = await db.query("SELECT COUNT(*) FROM pets WHERE status = 'available'");
+      const adoptedPetsResult = await db.query("SELECT COUNT(*) FROM pets WHERE status = 'adopted'");
+      
+      const availableCount = availablePetsResult.rows[0].count;
+      const adoptedCount = adoptedPetsResult.rows[0].count;
+
+      res.render('home', { 
+        title: 'Adota Pet — Encontre seu novo companheiro', 
+        pets: result.rows,
+        availableCount,
+        adoptedCount
+      });
     } catch (err) {
       console.error('Erro ao carregar home:', err);
-      res.render('home', { title: 'Adota Pet', pets: [] });
+      res.render('home', { title: 'Adota Pet', pets: [], availableCount: 0, adoptedCount: 0 });
     }
   },
 

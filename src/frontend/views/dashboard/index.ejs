@@ -1,0 +1,235 @@
+<%- include('../layout-header') %>
+
+<section class="dashboard-section" style="padding: 4rem 0; background-color: var(--bg-alt);">
+  <div class="container">
+    <div class="dashboard-header" style="margin-bottom: 3rem; text-align: center;">
+      <h1 style="color: var(--primary);">Olá, <%= adopter.name %>!</h1>
+      <p style="color: var(--text-muted); font-size: 1.1rem;">Bem-vindo(a) ao seu painel de adotante/doador.</p>
+    </div>
+
+    <div class="dashboard-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+      
+      <!-- Card: Adotar Pet -->
+      <div class="card" style="background: var(--bg); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; display: flex; flex-direction: column; gap: 1rem;">
+        <div style="font-size: 3rem;">🐾</div>
+        <h3>Adotar um Pet</h3>
+        <p style="color: var(--text-muted); flex-grow: 1;">Conheça nossos animais disponíveis e encontre seu novo melhor amigo.</p>
+        <a href="/pets" class="btn btn--primary" style="margin-top: 1rem;">Ver Pets</a>
+      </div>
+
+      <!-- Card: Fazer Doação -->
+      <div class="card" style="background: var(--bg); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; display: flex; flex-direction: column; gap: 1rem;">
+        <div style="font-size: 3rem;">💛</div>
+        <h3>Fazer uma Doação</h3>
+        <p style="color: var(--text-muted); flex-grow: 1;">Ajude nossa ONG a continuar cuidando dos animais resgatados através do PIX.</p>
+        <a href="/donate" class="btn btn--secondary" style="margin-top: 1rem;">Doar Agora</a>
+      </div>
+
+      <!-- Card: Ser Voluntário -->
+      <div class="card" style="background: var(--bg); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; display: flex; flex-direction: column; gap: 1rem;">
+        <div style="font-size: 3rem;">🤝</div>
+        <h3>Ser Voluntário</h3>
+        <p style="color: var(--text-muted); flex-grow: 1;">Participe ativamente das atividades e ajude na rotina da ONG.</p>
+        <a href="/volunteer" class="btn btn--outline" style="margin-top: 1rem;">Quero Ajudar</a>
+      </div>
+    </div> <!-- /dashboard-grid -->
+
+    <!-- Seção: Adoções -->
+    <% if (typeof userAdoptions !== 'undefined' && userAdoptions.length > 0) { %>
+      <div class="dashboard-history" style="margin-top: 4rem; background: var(--bg); padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <div style="border-bottom: 1px solid var(--gray-200); padding-bottom: 1rem; margin-bottom: 2rem;">
+            <h2 style="margin: 0; color: var(--primary);">Minhas Solicitações de Adoção</h2>
+          </div>
+          <div class="table-container">
+            <table class="table" style="width: 100%; text-align: left; border-collapse: collapse;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--gray-200);">
+                  <th style="padding: 1rem;">Pet</th>
+                  <th style="padding: 1rem;">Data do Pedido</th>
+                  <th style="padding: 1rem;">Status da Adoção</th>
+                  <th style="padding: 1rem;">Entrevista / Visita</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% 
+                  const adpStatus = {
+                    pending: '⏳ Pendente',
+                    approved: '✅ Aprovada',
+                    rejected: '❌ Rejeitada',
+                    completed: '🎉 Concluída',
+                  };
+                  const adpColor = {
+                    pending: 'var(--warning)',
+                    approved: 'var(--success)',
+                    rejected: 'var(--danger)',
+                    completed: 'var(--primary)',
+                  };
+                  const visStatus = {
+                    scheduled: '📅 Agendada',
+                    completed: '✅ Realizada',
+                    cancelled: '❌ Cancelada',
+                  };
+                %>
+                <% userAdoptions.forEach(function(a) { %>
+                  <tr style="border-bottom: 1px solid var(--gray-100);">
+                    <td style="padding: 1rem; display: flex; align-items: center; gap: 1rem;">
+                      <% if (a.pet_image) { %>
+                        <img src="<%= a.pet_image %>" alt="<%= a.pet_name %>" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                      <% } %>
+                      <strong><%= a.pet_name %></strong>
+                    </td>
+                    <td style="padding: 1rem;"><%= new Date(a.created_at).toLocaleDateString('pt-BR') %></td>
+                    <td style="padding: 1rem;">
+                      <span style="color: <%= adpColor[a.status] || 'var(--text)' %>; font-weight: 600;">
+                        <%= adpStatus[a.status] || a.status %>
+                      </span>
+                    </td>
+                    <td style="padding: 1rem;">
+                      <% if (a.visit_date && a.visit_time) { %>
+                        <div style="font-size: 0.9rem;">
+                          <strong><%= new Date(a.visit_date).toLocaleDateString('pt-BR') %></strong> às <%= a.visit_time %><br>
+                          <span style="color: var(--gray-500);"><%= visStatus[a.visit_status] || a.visit_status %></span>
+                        </div>
+                      <% } else if (a.status === 'pending') { %>
+                        <span style="color: var(--gray-400); font-size: 0.9rem;">Aguardando agendamento</span>
+                      <% } else { %>
+                        <span style="color: var(--gray-400); font-size: 0.9rem;">—</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% } %>
+
+    <!-- Seção: Voluntariado -->
+    <% if (typeof userVolunteers !== 'undefined' && userVolunteers.length > 0) { %>
+      <div class="dashboard-history" style="margin-top: 4rem; background: var(--bg); padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+        <div style="border-bottom: 1px solid var(--gray-200); padding-bottom: 1rem; margin-bottom: 2rem;">
+            <h2 style="margin: 0; color: var(--primary);">Minha Inscrição de Voluntário</h2>
+          </div>
+          <div class="table-container">
+            <table class="table" style="width: 100%; text-align: left; border-collapse: collapse;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--gray-200);">
+                  <th style="padding: 1rem;">Data da Inscrição</th>
+                  <th style="padding: 1rem;">Disponibilidade</th>
+                  <th style="padding: 1rem;">Status</th>
+                  <th style="padding: 1rem;">Atualização</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% 
+                  const volStatus = {
+                    pending: '⏳ Pendente',
+                    approved: '✅ Aprovado',
+                    rejected: '❌ Rejeitado',
+                  };
+                  const volColor = {
+                    pending: 'var(--warning)',
+                    approved: 'var(--success)',
+                    rejected: 'var(--danger)',
+                  };
+                %>
+                <% userVolunteers.forEach(function(v) { %>
+                  <tr style="border-bottom: 1px solid var(--gray-100);">
+                    <td style="padding: 1rem;"><%= new Date(v.created_at).toLocaleDateString('pt-BR') %></td>
+                    <td style="padding: 1rem;"><%= v.availability %></td>
+                    <td style="padding: 1rem;">
+                      <span style="color: <%= volColor[v.status] || 'var(--text)' %>; font-weight: 600;">
+                        <%= volStatus[v.status] || v.status %>
+                      </span>
+                    </td>
+                    <td style="padding: 1rem;">
+                      <% if (v.reviewed_at) { %>
+                        <%= new Date(v.reviewed_at).toLocaleDateString('pt-BR') %>
+                      <% } else { %>
+                        <span style="color: var(--gray-400);">—</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% } %>
+
+    <div class="dashboard-history" style="margin-top: 4rem; background: var(--bg); padding: 2rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--gray-200); padding-bottom: 1rem; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <h2 style="margin: 0; color: var(--primary);">Meu Histórico de Doações</h2>
+        <div style="text-align: right;">
+          <span style="color: var(--text-muted); font-size: 0.9rem;">Total Doado (Confirmado)</span>
+          <strong style="display: block; font-size: 1.5rem; color: var(--success);">
+            <%= (typeof totalDonated !== 'undefined' ? totalDonated : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %>
+          </strong>
+        </div>
+      </div>
+
+      <% if (typeof userDonations !== 'undefined' && userDonations.length > 0) { %>
+        <div class="table-container">
+          <table class="table" style="width: 100%; text-align: left; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid var(--gray-200);">
+                <th style="padding: 1rem;">Código</th>
+                <th style="padding: 1rem;">Data</th>
+                <th style="padding: 1rem;">Valor</th>
+                <th style="padding: 1rem;">Status</th>
+                <th style="padding: 1rem;">Comprovante</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% 
+                const statusLabels = {
+                  completed: '✅ Confirmado',
+                  pending_payment: '⏳ Aguardando PIX',
+                  pending_review: '🔍 Em Análise',
+                  rejected: '❌ Rejeitado',
+                };
+                const statusColor = {
+                  completed: 'var(--success)',
+                  pending_payment: 'var(--warning)',
+                  pending_review: 'var(--warning)',
+                  rejected: 'var(--danger)',
+                };
+              %>
+              <% userDonations.forEach(function(d) { %>
+                <tr style="border-bottom: 1px solid var(--gray-100);">
+                  <td style="padding: 1rem;"><strong style="color: var(--gray-600);"><%= d.receipt_code %></strong></td>
+                  <td style="padding: 1rem;"><%= new Date(d.created_at).toLocaleDateString('pt-BR') %></td>
+                  <td style="padding: 1rem;"><strong><%= parseFloat(d.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></td>
+                  <td style="padding: 1rem;">
+                    <span style="color: <%= statusColor[d.status] || 'var(--text)' %>; font-weight: 500; font-size: 0.9rem;">
+                      <%= statusLabels[d.status] || d.status %>
+                    </span>
+                  </td>
+                  <td style="padding: 1rem;">
+                    <% if (d.receipt_image) { %>
+                      <a href="<%= d.receipt_image %>" target="_blank" class="btn btn--outline btn--sm" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">📎 Ver</a>
+                    <% } else { %>
+                      <a href="/donate/receipt/<%= d.receipt_code %>" class="btn btn--outline btn--sm" style="padding: 0.25rem 0.75rem; font-size: 0.8rem; border-color: var(--warning); color: var(--warning);">Enviar</a>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          <span style="font-size: 2rem; display: block; margin-bottom: 1rem;">💛</span>
+          <p>Você ainda não realizou nenhuma doação.</p>
+          <a href="/donate" class="btn btn--primary btn--sm" style="margin-top: 1rem;">Fazer minha primeira doação</a>
+        </div>
+      <% } %>
+    </div>
+    
+    <div style="text-align: center; margin-top: 4rem;">
+      <a href="/logout" class="btn btn--outline" style="color: var(--danger); border-color: var(--danger);">Sair da Conta</a>
+    </div>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

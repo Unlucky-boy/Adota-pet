@@ -2,8 +2,14 @@
 
 <section class="admin-section">
   <div class="container">
-    <div class="admin-header">
+    <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
       <h1>💰 Gerenciar Doações</h1>
+      <div style="background: var(--bg); padding: 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);">
+        <span style="color: var(--text-muted); font-size: 0.9rem;">Saldo Total (Confirmado)</span>
+        <strong style="display: block; font-size: 1.5rem; color: var(--success);">
+          <%= (typeof totalBalance !== 'undefined' ? totalBalance : 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %>
+        </strong>
+      </div>
     </div>
 
     <% if (donations.length === 0) { %>
