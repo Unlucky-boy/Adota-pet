@@ -293,7 +293,7 @@
       document.getElementById('edit-vaccinated').checked = pet.vaccinated;
       document.getElementById('edit-neutered').checked = pet.neutered;
       document.getElementById('edit-status').value = pet.status || 'available';
-      document.getElementById('edit-image-hint').textContent = pet.image_url ? 'Foto atual: ' + pet.image_url : '';
+      document.getElementById('edit-image-hint').textContent = 'Foto atual disponível';
 
       openModal('editModal');
     } catch (err) {

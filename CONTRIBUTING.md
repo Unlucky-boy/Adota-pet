@@ -138,7 +138,8 @@ Animais cadastrados pela ONG.
 | size | VARCHAR(20) | `small`, `medium`, `large` |
 | gender | VARCHAR(10) | `male`, `female` |
 | description | TEXT | Descrição do pet |
-| image_url | TEXT | Caminho da foto |
+| image_data | BYTEA | Dados binários da foto |
+| image_mime_type | VARCHAR(50) | Tipo MIME da foto (ex: image/jpeg) |
 | vaccinated | BOOLEAN | Vacinado? |
 | neutered | BOOLEAN | Castrado? |
 | status | VARCHAR(20) | `available`, `adopted`, `reserved` |
@@ -225,4 +226,4 @@ node scripts/generate-password.js <senha>
 1. **Nunca commite o `.env`** — ele contém credentials locais.
 2. **Nunca edite `node_modules/`** — use apenas `npm install/add/remove`.
 3. **Alterações no banco** devem ser feitas no `seed.sql` e re-executadas com `docker-compose down -v && docker-compose up -d`.
-4. **Imagens de pet** vão para `public/uploads/` via Multer. Essa pasta não é commitada (exceto o `.gitkeep`).
+4. **Imagens de pet** são armazenadas diretamente no banco de dados (BYTEA) e servidas via rota `/pets/:id/image`.

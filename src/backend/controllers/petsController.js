@@ -5,7 +5,7 @@ const petsController = {
   async home(req, res) {
     try {
       const result = await db.query(
-        "SELECT * FROM pets WHERE status = 'available' ORDER BY created_at DESC LIMIT 6"
+        "SELECT id, name, species, breed, age_months, size, gender, description, vaccinated, neutered, status, created_at FROM pets WHERE status = 'available' ORDER BY created_at DESC LIMIT 6"
       );
       
       const availablePetsResult = await db.query("SELECT COUNT(*) FROM pets WHERE status = 'available'");
@@ -30,7 +30,7 @@ const petsController = {
   async list(req, res) {
     try {
       const { species, size, gender } = req.query;
-      let query = "SELECT * FROM pets WHERE status = 'available'";
+      let query = "SELECT id, name, species, breed, age_months, size, gender, description, vaccinated, neutered, status, created_at FROM pets WHERE status = 'available'";
       const params = [];
       let paramIndex = 1;
 
@@ -64,7 +64,7 @@ const petsController = {
   // GET /pets/:id — Detalhe do pet
   async detail(req, res) {
     try {
-      const result = await db.query('SELECT * FROM pets WHERE id = $1', [req.params.id]);
+      const result = await db.query('SELECT id, name, species, breed, age_months, size, gender, description, vaccinated, neutered, status, created_at FROM pets WHERE id = $1', [req.params.id]);
       if (result.rows.length === 0) {
         return res.status(404).render('404', { title: 'Pet não encontrado' });
       }
@@ -81,7 +81,7 @@ const petsController = {
   // GET /admin/pets — Dashboard (ONG)
   async adminList(req, res) {
     try {
-      const result = await db.query('SELECT * FROM pets ORDER BY created_at DESC');
+      const result = await db.query('SELECT id, name, species, breed, age_months, size, gender, description, vaccinated, neutered, status, created_at FROM pets ORDER BY created_at DESC');
       res.render('admin/pets', { title: 'Gerenciar Pets — Adota Pet', pets: result.rows });
     } catch (err) {
       console.error('Erro ao listar pets (admin):', err);
@@ -98,14 +98,16 @@ const petsController = {
   async create(req, res) {
     const { name, species, breed, age_months, size, gender, description, vaccinated, neutered } = req.body;
     try {
+      const image_data = req.file ? req.file.buffer : null;
+      const image_mime_type = req.file ? req.file.mimetype : null;
       await db.query(
-        `INSERT INTO pets (name, species, breed, age_months, size, gender, description, image_url, vaccinated, neutered)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        `INSERT INTO pets (name, species, breed, age_months, size, gender, description, image_data, image_mime_type, vaccinated, neutered)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
         [
           name, species, breed,
           age_months ? parseInt(age_months, 10) : null,
           size, gender, description,
-          req.file ? `/uploads/${req.file.filename}` : '/img/pets/default.jpg',
+          image_data, image_mime_type,
           vaccinated === 'on',
           neutered === 'on',
         ]
@@ -122,7 +124,7 @@ const petsController = {
   // GET /admin/pets/:id/edit — Formulário de edição
   async editForm(req, res) {
     try {
-      const result = await db.query('SELECT * FROM pets WHERE id = $1', [req.params.id]);
+      const result = await db.query('SELECT id, name, species, breed, age_months, size, gender, description, vaccinated, neutered, status, created_at FROM pets WHERE id = $1', [req.params.id]);
       if (result.rows.length === 0) {
         return res.status(404).render('404', { title: 'Pet não encontrado' });
       }
@@ -140,7 +142,7 @@ const petsController = {
   async update(req, res) {
     const { name, species, breed, age_months, size, gender, description, vaccinated, neutered, status } = req.body;
     try {
-      const imageUpdate = req.file ? ', image_url = $11' : '';
+      let imageUpdate = '';
       const params = [
         name, species, breed,
         age_months ? parseInt(age_months, 10) : null,
@@ -152,7 +154,8 @@ const petsController = {
       ];
 
       if (req.file) {
-        params.splice(10, 0, `/uploads/${req.file.filename}`);
+        imageUpdate = ', image_data = $12, image_mime_type = $13';
+        params.push(req.file.buffer, req.file.mimetype);
       }
 
       await db.query(
@@ -161,7 +164,7 @@ const petsController = {
           size = $5, gender = $6, description = $7,
           vaccinated = $8, neutered = $9, status = $10
           ${imageUpdate}
-         WHERE id = $${req.file ? 12 : 11}`,
+         WHERE id = $11`,
         params
       );
 
@@ -187,10 +190,25 @@ const petsController = {
     }
   },
 
+  // GET /pets/:id/image — Retorna a imagem do pet
+  async image(req, res) {
+    try {
+      const result = await db.query('SELECT image_data, image_mime_type FROM pets WHERE id = $1', [req.params.id]);
+      if (result.rows.length === 0 || !result.rows[0].image_data) {
+        return res.redirect('/img/pets/default.jpg');
+      }
+      res.set('Content-Type', result.rows[0].image_mime_type);
+      res.send(result.rows[0].image_data);
+    } catch (err) {
+      console.error('Erro ao buscar imagem:', err);
+      res.status(500).send('Erro interno');
+    }
+  },
+
   // GET /api/pets/:id — Retorna JSON de um pet (para modal de edição)
   async getJson(req, res) {
     try {
-      const result = await db.query('SELECT * FROM pets WHERE id = $1', [req.params.id]);
+      const result = await db.query('SELECT id, name, species, breed, age_months, size, gender, description, vaccinated, neutered, status, created_at FROM pets WHERE id = $1', [req.params.id]);
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Pet não encontrado' });
       }

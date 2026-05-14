@@ -6,13 +6,7 @@ const petsController = require('../controllers/petsController');
 const isAuthenticated = require('../middlewares/isAuthenticated');
 
 // Multer config para upload de imagens
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, '..', '..', 'frontend', 'public', 'uploads'),
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
-});
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -29,6 +23,7 @@ const upload = multer({
 router.get('/', petsController.home);
 router.get('/pets', petsController.list);
 router.get('/pets/:id', petsController.detail);
+router.get('/pets/:id/image', petsController.image);
 
 // Rotas admin (protegidas)
 router.get('/admin/pets', isAuthenticated, petsController.adminList);

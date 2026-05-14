@@ -68,8 +68,8 @@
       <div class="form__group">
         <label for="image">Foto do pet</label>
         <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
-        <% if (pet && pet.image_url) { %>
-          <p class="form__hint">Foto atual: <%= pet.image_url %></p>
+        <% if (pet) { %>
+          <p class="form__hint">Foto atual disponível</p>
         <% } %>
       </div>
 

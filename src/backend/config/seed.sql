@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS pets (
   size VARCHAR(20),
   gender VARCHAR(10),
   description TEXT,
-  image_url TEXT,
+  image_data BYTEA,
+  image_mime_type VARCHAR(50),
   vaccinated BOOLEAN DEFAULT FALSE,
   neutered BOOLEAN DEFAULT FALSE,
   status VARCHAR(20) DEFAULT 'available',
@@ -53,30 +54,30 @@ INSERT INTO users (name, email, password_hash) VALUES
 ON CONFLICT (email) DO NOTHING;
 
 -- Pets de exemplo
-INSERT INTO pets (name, species, breed, age_months, size, gender, description, image_url, vaccinated, neutered, status) VALUES
+INSERT INTO pets (name, species, breed, age_months, size, gender, description, vaccinated, neutered, status) VALUES
   ('Thor', 'dog', 'Vira-lata', 24, 'large', 'male',
    'Thor é um cachorro muito dócil e brincalhão. Adora crianças e se dá bem com outros animais. Está vacinado e castrado, pronto para um lar cheio de amor!',
-   '/img/pets/thor.jpg', TRUE, TRUE, 'available'),
+   TRUE, TRUE, 'available'),
 
   ('Luna', 'cat', 'Siamês', 12, 'small', 'female',
    'Luna é uma gatinha independente mas muito carinhosa. Gosta de ficar no colo e ronrona alto. Ideal para apartamento.',
-   '/img/pets/luna.jpg', TRUE, TRUE, 'available'),
+   TRUE, TRUE, 'available'),
 
   ('Bob', 'dog', 'Labrador', 6, 'large', 'male',
    'Bob é um filhote cheio de energia! Precisa de espaço para correr e brincar. Muito inteligente e aprende rápido.',
-   '/img/pets/bob.jpg', TRUE, FALSE, 'available'),
+   TRUE, FALSE, 'available'),
 
   ('Mel', 'cat', 'Persa', 36, 'medium', 'female',
    'Mel é uma gata calma e elegante. Perfeita para pessoas que buscam uma companhia tranquila. Muito bem cuidada.',
-   '/img/pets/mel.jpg', TRUE, TRUE, 'available'),
+   TRUE, TRUE, 'available'),
 
   ('Rex', 'dog', 'Pastor Alemão', 18, 'large', 'male',
    'Rex é um cão leal e protetor. Foi resgatado de situação de maus-tratos e agora busca um lar definitivo.',
-   '/img/pets/rex.jpg', TRUE, TRUE, 'available'),
+   TRUE, TRUE, 'available'),
 
   ('Mia', 'cat', 'Vira-lata', 8, 'small', 'female',
    'Mia é uma gatinha muito brincalhona e ativa. Adora brinquedos e é ótima com crianças.',
-   '/img/pets/mia.jpg', FALSE, FALSE, 'available')
+   FALSE, FALSE, 'available')
 ON CONFLICT DO NOTHING;
 
 -- Tabela de adotantes (US11 — Cadastro de Adotante)
