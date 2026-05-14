@@ -1,0 +1,96 @@
+<%- include('../layout-header') %>
+
+<section class="volunteer-section">
+  <div class="container">
+    <div class="volunteer-card">
+      <div class="volunteer-card__header">
+        <span class="volunteer-card__icon">🤝</span>
+        <h1>Seja Voluntário</h1>
+        <p>Ajude a ONG Love Patinhas nos cuidados com os animais</p>
+      </div>
+      <form class="form" method="POST" action="/volunteer" id="volunteerForm">
+        <div class="form__row">
+          <div class="form__group">
+            <label for="vol-name">Nome completo *</label>
+            <input
+              type="text"
+              id="vol-name"
+              name="name"
+              required
+              placeholder="Seu nome completo"
+              value="<%= (formData && formData.name) ? formData.name : '' %>"
+              autocomplete="name"
+            >
+          </div>
+          <div class="form__group">
+            <label for="vol-phone">Telefone *</label>
+            <input
+              type="tel"
+              id="vol-phone"
+              name="phone"
+              required
+              placeholder="(00) 00000-0000"
+              maxlength="15"
+              value="<%= (formData && formData.phone) ? formData.phone : '' %>"
+              autocomplete="tel"
+            >
+          </div>
+        </div>
+        <div class="form__group">
+          <label for="vol-email">E-mail *</label>
+          <input
+            type="email"
+            id="vol-email"
+            name="email"
+            required
+            placeholder="seu@email.com"
+            value="<%= (formData && formData.email) ? formData.email : '' %>"
+            autocomplete="email"
+          >
+        </div>
+        <div class="form__group">
+          <label for="vol-availability">Disponibilidade *</label>
+          <textarea
+            id="vol-availability"
+            name="availability"
+            required
+            rows="3"
+            placeholder="Ex: Sábados pela manhã, domingos à tarde, dias de semana após as 18h..."
+          ><%= (formData && formData.availability) ? formData.availability : '' %></textarea>
+          <span class="form__hint">Informe os dias e horários em que você pode ajudar</span>
+        </div>
+        <div class="form__group">
+          <label for="vol-motivation">Motivação (opcional)</label>
+          <textarea
+            id="vol-motivation"
+            name="motivation"
+            rows="3"
+            placeholder="Conte-nos por que você quer ser voluntário..."
+          ><%= (formData && formData.motivation) ? formData.motivation : '' %></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary btn--lg btn--full">🤝 Enviar Inscrição</button>
+      </form>
+      <div class="volunteer-card__footer">
+        <a href="/">← Voltar para o site</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Máscara de telefone
+  document.getElementById('vol-phone').addEventListener('input', function(e) {
+    var v = e.target.value.replace(/\D/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+    if (v.length > 10) {
+      v = v.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (v.length > 6) {
+      v = v.replace(/(\d{2})(\d{4,5})(\d{0,4})/, '($1) $2-$3');
+    } else if (v.length > 2) {
+      v = v.replace(/(\d{2})(\d{0,5})/, '($1) $2');
+    }
+    e.target.value = v;
+  });
+</script>
+
+<%- include('../layout-footer') %>

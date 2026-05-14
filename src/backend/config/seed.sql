@@ -78,3 +78,66 @@ INSERT INTO pets (name, species, breed, age_months, size, gender, description, i
    'Mia é uma gatinha muito brincalhona e ativa. Adora brinquedos e é ótima com crianças.',
    '/img/pets/mia.jpg', FALSE, FALSE, 'available')
 ON CONFLICT DO NOTHING;
+
+-- Tabela de adotantes (US11 — Cadastro de Adotante)
+CREATE TABLE IF NOT EXISTS adopters (
+  id          SERIAL PRIMARY KEY,
+  name        VARCHAR(100) NOT NULL,
+  cpf         VARCHAR(14)  UNIQUE NOT NULL,
+  phone       VARCHAR(20)  NOT NULL,
+  email       VARCHAR(150) UNIQUE NOT NULL,
+  address     TEXT         NOT NULL,
+  created_at  TIMESTAMP    DEFAULT NOW()
+);
+
+-- Tabela de doações financeiras (US13 — Doação)
+CREATE TABLE IF NOT EXISTS donations (
+  id              SERIAL PRIMARY KEY,
+  amount          NUMERIC(10,2) NOT NULL,
+  payment_method  VARCHAR(20)   NOT NULL,
+  donor_name      VARCHAR(100),
+  donor_email     VARCHAR(150),
+  status          VARCHAR(20)   DEFAULT 'completed',
+  receipt_code    VARCHAR(50)   UNIQUE NOT NULL,
+  receipt_image   TEXT,
+  created_at      TIMESTAMP     DEFAULT NOW()
+);
+
+-- Tabela de voluntários (US14 / US16)
+CREATE TABLE IF NOT EXISTS volunteers (
+  id             SERIAL PRIMARY KEY,
+  name           VARCHAR(100) NOT NULL,
+  email          VARCHAR(150) UNIQUE NOT NULL,
+  phone          VARCHAR(20)  NOT NULL,
+  availability   TEXT         NOT NULL,
+  motivation     TEXT,
+  status         VARCHAR(20)  DEFAULT 'pending',
+  reviewed_by    INTEGER      REFERENCES users(id),
+  reviewed_at    TIMESTAMP,
+  created_at     TIMESTAMP    DEFAULT NOW()
+);
+
+-- Tabela de agendamentos de visita (US15)
+CREATE TABLE IF NOT EXISTS visits (
+  id             SERIAL PRIMARY KEY,
+  adoption_id    INTEGER      REFERENCES adoptions(id) ON DELETE CASCADE,
+  visit_date     DATE         NOT NULL,
+  visit_time     TIME         NOT NULL,
+  visit_type     VARCHAR(30)  DEFAULT 'home_visit',
+  notes          TEXT,
+  status         VARCHAR(20)  DEFAULT 'scheduled',
+  scheduled_by   INTEGER      REFERENCES users(id),
+  created_at     TIMESTAMP    DEFAULT NOW()
+);
+
+-- Configurações do sistema (chave PIX, e-mail do projeto)
+CREATE TABLE IF NOT EXISTS settings (
+  key         VARCHAR(50) PRIMARY KEY,
+  value       TEXT NOT NULL DEFAULT '',
+  updated_at  TIMESTAMP DEFAULT NOW()
+);
+
+INSERT INTO settings (key, value) VALUES
+  ('pix_key', ''),
+  ('project_email', '')
+ON CONFLICT (key) DO NOTHING;

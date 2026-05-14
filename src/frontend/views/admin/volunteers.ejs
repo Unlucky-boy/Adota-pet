@@ -1,0 +1,111 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <div class="admin-header">
+      <h1>🤝 Gerenciar Voluntários</h1>
+      <div class="admin-header__stats">
+        <span class="stat-pill stat-pill--total">Total: <%= counts.total %></span>
+        <span class="stat-pill stat-pill--pending">⏳ Pendentes: <%= counts.pending %></span>
+        <span class="stat-pill stat-pill--approved">✅ Aprovados: <%= counts.approved %></span>
+        <span class="stat-pill stat-pill--rejected">❌ Rejeitados: <%= counts.rejected %></span>
+      </div>
+    </div>
+
+    <!-- Filtro por status -->
+    <div class="filters" style="margin-bottom: var(--space-6);">
+      <div class="filters__group">
+        <label>Filtrar por status</label>
+        <form method="GET" action="/admin/volunteers" style="display: flex; gap: 0.5rem;">
+          <select name="status" onchange="this.form.submit()">
+            <option value="all" <%= statusFilter === 'all' ? 'selected' : '' %>>Todos</option>
+            <option value="pending" <%= statusFilter === 'pending' ? 'selected' : '' %>>⏳ Pendentes</option>
+            <option value="approved" <%= statusFilter === 'approved' ? 'selected' : '' %>>✅ Aprovados</option>
+            <option value="rejected" <%= statusFilter === 'rejected' ? 'selected' : '' %>>❌ Rejeitados</option>
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <% if (volunteers.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon">📭</span>
+        <h3>Nenhum voluntário encontrado</h3>
+        <p>
+          <% if (statusFilter !== 'all') { %>
+            Nenhum voluntário com este status. <a href="/admin/volunteers">Ver todos</a>
+          <% } else { %>
+            Quando alguém se inscrever como voluntário, aparecerá aqui.
+          <% } %>
+        </p>
+      </div>
+    <% } else { %>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Contato</th>
+              <th>Disponibilidade</th>
+              <th>Data</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% volunteers.forEach(function(vol) { %>
+              <tr>
+                <td>#<%= vol.id %></td>
+                <td>
+                  <strong><%= vol.name %></strong>
+                  <% if (vol.motivation) { %>
+                    <br><small title="<%= vol.motivation %>">💬 "<%= vol.motivation.substring(0, 40) %><%= vol.motivation.length > 40 ? '...' : '' %>"</small>
+                  <% } %>
+                </td>
+                <td>
+                  📧 <%= vol.email %>
+                  <br>📱 <%= vol.phone %>
+                </td>
+                <td>
+                  <small><%= vol.availability.substring(0, 60) %><%= vol.availability.length > 60 ? '...' : '' %></small>
+                </td>
+                <td><%= new Date(vol.created_at).toLocaleDateString('pt-BR') %></td>
+                <td>
+                  <span class="status-badge status-badge--<%= vol.status %>">
+                    <%= vol.status === 'pending' ? '⏳ Pendente' : vol.status === 'approved' ? '✅ Aprovado' : '❌ Rejeitado' %>
+                  </span>
+                  <% if (vol.reviewer_name && vol.status !== 'pending') { %>
+                    <br><small class="review-info">por <%= vol.reviewer_name %></small>
+                    <br><small class="review-info"><%= new Date(vol.reviewed_at).toLocaleDateString('pt-BR') %></small>
+                  <% } %>
+                </td>
+                <td class="table__actions">
+                  <% if (vol.status === 'pending') { %>
+                    <form method="POST" action="/admin/volunteers/<%= vol.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="approved">
+                      <button type="submit" class="btn btn--success btn--sm"
+                              onclick="return confirm('Aprovar este voluntário?')">✓ Aprovar</button>
+                    </form>
+                    <form method="POST" action="/admin/volunteers/<%= vol.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="rejected">
+                      <button type="submit" class="btn btn--danger btn--sm"
+                              onclick="return confirm('Rejeitar este voluntário?')">✕ Rejeitar</button>
+                    </form>
+                  <% } else { %>
+                    <form method="POST" action="/admin/volunteers/<%= vol.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="pending">
+                      <button type="submit" class="btn btn--outline btn--sm">↩ Pendente</button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

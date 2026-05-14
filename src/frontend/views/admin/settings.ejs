@@ -1,0 +1,42 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <div class="settings-card">
+      <div class="settings-card__header">
+        <h1>⚙️ Configurações do Sistema</h1>
+        <p>Gerencie as informações de pagamento e contato do projeto</p>
+      </div>
+
+      <form class="form" method="POST" action="/admin/settings">
+        <div class="form__group">
+          <label for="settings-pix">Chave PIX da ONG</label>
+          <input
+            type="text"
+            id="settings-pix"
+            name="pix_key"
+            placeholder="Ex: email@ong.com, (82)99999-9999, CPF/CNPJ ou chave aleatória"
+            value="<%= settings.pix_key || '' %>"
+          >
+          <span class="form__hint">Esta chave será exibida para doadores que escolherem PIX como método de pagamento</span>
+        </div>
+
+        <div class="form__group">
+          <label for="settings-email">E-mail oficial do projeto</label>
+          <input
+            type="email"
+            id="settings-email"
+            name="project_email"
+            placeholder="contato@lovepatinhas.org"
+            value="<%= settings.project_email || '' %>"
+          >
+          <span class="form__hint">E-mail exibido para os doadores como contato do projeto</span>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--lg">💾 Salvar Configurações</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

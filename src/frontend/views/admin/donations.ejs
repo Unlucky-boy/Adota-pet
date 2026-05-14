@@ -1,0 +1,103 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <div class="admin-header">
+      <h1>💰 Gerenciar Doações</h1>
+    </div>
+
+    <% if (donations.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon">💰</span>
+        <h3>Nenhuma doação recebida</h3>
+        <p>Quando alguém fizer uma doação, aparecerá aqui.</p>
+      </div>
+    <% } else { %>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Doador</th>
+              <th>Valor</th>
+              <th>Método</th>
+              <th>Status</th>
+              <th>Comprovante</th>
+              <th>Data</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <%
+              const methodLabels = { pix: '📱 PIX', card: '💳 Cartão', boleto: '🏦 Boleto' };
+              const statusLabels = {
+                completed: '✅ Confirmado',
+                pending_payment: '⏳ Aguardando PIX',
+                pending_review: '🔍 Pendente',
+                rejected: '❌ Rejeitado',
+              };
+              const statusClass = {
+                completed: 'approved',
+                pending_payment: 'pending',
+                pending_review: 'pending',
+                rejected: 'rejected',
+              };
+            %>
+            <% donations.forEach(function(d) { %>
+              <tr>
+                <td>#<%= d.id %></td>
+                <td>
+                  <% if (d.donor_name) { %>
+                    <strong><%= d.donor_name %></strong>
+                  <% } else { %>
+                    <em style="color: var(--gray-400);">Anônimo</em>
+                  <% } %>
+                  <% if (d.donor_email) { %>
+                    <br><small>📧 <%= d.donor_email %></small>
+                  <% } %>
+                </td>
+                <td>
+                  <strong><%= parseFloat(d.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                </td>
+                <td><%= methodLabels[d.payment_method] || d.payment_method %></td>
+                <td>
+                  <span class="status-badge status-badge--<%= statusClass[d.status] || 'pending' %>">
+                    <%= statusLabels[d.status] || d.status %>
+                  </span>
+                </td>
+                <td>
+                  <% if (d.receipt_image) { %>
+                    <a href="<%= d.receipt_image %>" target="_blank" class="btn btn--outline btn--sm">📎 Ver</a>
+                  <% } else { %>
+                    <span style="color: var(--gray-400);">—</span>
+                  <% } %>
+                </td>
+                <td><%= new Date(d.created_at).toLocaleDateString('pt-BR') %></td>
+                <td class="table__actions">
+                  <% if (d.status === 'pending_review') { %>
+                    <form method="POST" action="/admin/donations/<%= d.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="completed">
+                      <button type="submit" class="btn btn--success btn--sm"
+                              onclick="return confirm('Confirmar esta doação?')">✓ Confirmar</button>
+                    </form>
+                    <form method="POST" action="/admin/donations/<%= d.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="rejected">
+                      <button type="submit" class="btn btn--danger btn--sm"
+                              onclick="return confirm('Rejeitar esta doação?')">✕ Rejeitar</button>
+                    </form>
+                  <% } else if (d.status === 'pending_payment') { %>
+                    <span style="color: var(--gray-400); font-size: var(--text-xs);">Aguardando comprovante</span>
+                  <% } else { %>
+                    <span style="color: var(--gray-400);">—</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

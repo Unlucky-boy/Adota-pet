@@ -91,41 +91,59 @@ Adota-pet/
 │   │   │   ├── db.js              # Conexão PostgreSQL
 │   │   │   └── seed.sql           # DDL + dados iniciais
 │   │   ├── routes/
-│   │   │   ├── auth.js            # Rotas de login/logout
-│   │   │   ├── pets.js            # Rotas de pets (público + admin)
-│   │   │   └── adoptions.js       # Rotas de adoções
+│   │   │   ├── auth.js            # Login/logout
+│   │   │   ├── pets.js            # Pets (público + admin)
+│   │   │   ├── adoptions.js       # Solicitações de adoção
+│   │   │   ├── adopters.js        # Cadastro de adotante (US11)
+│   │   │   ├── donations.js       # Doação financeira (US13)
+│   │   │   ├── volunteers.js      # Voluntários (US14/US16)
+│   │   │   ├── visits.js          # Agendamento de visita (US15)
+│   │   │   └── settings.js        # Configurações do sistema
 │   │   ├── controllers/
-│   │   │   ├── authController.js  # Lógica de autenticação
-│   │   │   ├── petsController.js  # CRUD de pets
-│   │   │   └── adoptionsController.js # Gestão de adoções
-│   │   └── middlewares/
-│   │       └── isAuthenticated.js # Proteção de rotas admin
+│   │   │   ├── authController.js
+│   │   │   ├── petsController.js
+│   │   │   ├── adoptionsController.js
+│   │   │   ├── adoptersController.js
+│   │   │   ├── donationsController.js
+│   │   │   ├── volunteersController.js
+│   │   │   ├── visitsController.js
+│   │   │   └── settingsController.js
+│   │   ├── middlewares/
+│   │   │   └── isAuthenticated.js
+│   │   └── utils/
+│   │       └── cpf.js             # Validação de CPF
 │   └── frontend/
-│       ├── views/                 # Templates EJS
-│       │   ├── layout-header.ejs  # Cabeçalho HTML
-│       │   ├── layout-footer.ejs  # Rodapé HTML
-│       │   ├── home.ejs           # Página inicial
-│       │   ├── 404.ejs            # Página de erro
+│       ├── views/
+│       │   ├── layout-header.ejs
+│       │   ├── layout-footer.ejs
+│       │   ├── home.ejs
+│       │   ├── 404.ejs
 │       │   ├── partials/
-│       │   │   └── pet-card.ejs   # Card reutilizável
+│       │   │   └── pet-card.ejs
 │       │   ├── pets/
-│       │   │   ├── list.ejs       # Listagem com filtros
-│       │   │   └── detail.ejs     # Detalhe + form adoção
 │       │   ├── auth/
-│       │   │   └── login.ejs      # Login da ONG
 │       │   ├── adoptions/
-│       │   │   └── success.ejs    # Confirmação
+│       │   ├── register/          # US11 — Cadastro adotante
+│       │   ├── donations/         # US13 — Doação financeira
+│       │   ├── volunteer/         # US14 — Cadastro voluntário
 │       │   └── admin/
-│       │       ├── pets.ejs       # Dashboard de pets
-│       │       ├── pet-form.ejs   # Cadastro/edição
-│       │       └── adoptions.ejs  # Dashboard de adoções
+│       │       ├── pets.ejs
+│       │       ├── pet-form.ejs
+│       │       ├── adoptions.ejs
+│       │       ├── donations.ejs  # Gerenciar doações
+│       │       ├── volunteers.ejs # Aprovar voluntários (US16)
+│       │       ├── visits.ejs     # Agendamentos (US15)
+│       │       ├── visit-form.ejs
+│       │       └── settings.ejs   # Configurações do sistema
 │       └── public/
-│           ├── css/style.css      # Design system
-│           ├── img/               # Imagens estáticas
-│           └── uploads/           # Uploads de fotos
+│           ├── css/style.css
+│           ├── img/
+│           └── uploads/
+├── docs/
+│   └── SPRINT3.md                 # Documentação da Sprint 3
 ├── scripts/
-│   └── generate-password.js       # Gerar hash bcrypt
-├── docker-compose.yml             # PostgreSQL via Docker
+│   └── generate-password.js
+├── docker-compose.yml
 ├── package.json
 ├── .env.example
 └── .gitignore

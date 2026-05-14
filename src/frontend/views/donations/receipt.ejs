@@ -1,0 +1,146 @@
+<%- include('../layout-header') %>
+
+<%
+  const methodLabels = {
+    pix: '📱 PIX',
+    card: '💳 Cartão',
+    boleto: '🏦 Boleto',
+  };
+  const statusLabels = {
+    completed: '✅ Confirmado',
+    pending_payment: '⏳ Aguardando PIX',
+    pending_review: '🔍 Aguardando Confirmação',
+    rejected: '❌ Rejeitado',
+  };
+  const statusClass = {
+    completed: 'approved',
+    pending_payment: 'pending',
+    pending_review: 'pending',
+    rejected: 'rejected',
+  };
+  const formattedAmount = parseFloat(donation.amount).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+  const formattedDate = new Date(donation.created_at).toLocaleString('pt-BR', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+  });
+%>
+
+<section class="receipt-section">
+  <div class="container">
+    <div class="receipt-card" id="receiptCard">
+      <div class="receipt-card__header">
+        <span class="receipt-card__icon"><%= donation.status === 'completed' ? '✅' : donation.status === 'rejected' ? '❌' : '⏳' %></span>
+        <h1><%= donation.status === 'completed' ? 'Doação Confirmada!' : donation.status === 'rejected' ? 'Doação Rejeitada' : donation.payment_method === 'pix' ? 'Doação Registrada!' : 'Doação Recebida!' %></h1>
+        <p>Obrigado pela sua contribuição à ONG Love Patinhas</p>
+      </div>
+
+      <div class="receipt-card__body">
+        <div class="receipt-card__row">
+          <span class="receipt-card__label">Código do Comprovante</span>
+          <span class="receipt-card__value receipt-card__value--code"><%= donation.receipt_code %></span>
+        </div>
+        <div class="receipt-card__divider"></div>
+        <div class="receipt-card__row">
+          <span class="receipt-card__label">Valor</span>
+          <span class="receipt-card__value receipt-card__value--amount"><%= formattedAmount %></span>
+        </div>
+        <div class="receipt-card__row">
+          <span class="receipt-card__label">Método</span>
+          <span class="receipt-card__value"><%= methodLabels[donation.payment_method] || donation.payment_method %></span>
+        </div>
+        <div class="receipt-card__row">
+          <span class="receipt-card__label">Status</span>
+          <span class="receipt-card__value">
+            <span class="status-badge status-badge--<%= statusClass[donation.status] || 'pending' %>">
+              <%= statusLabels[donation.status] || donation.status %>
+            </span>
+          </span>
+        </div>
+        <div class="receipt-card__row">
+          <span class="receipt-card__label">Data</span>
+          <span class="receipt-card__value"><%= formattedDate %></span>
+        </div>
+        <% if (donation.donor_name) { %>
+          <div class="receipt-card__row">
+            <span class="receipt-card__label">Doador</span>
+            <span class="receipt-card__value"><%= donation.donor_name %></span>
+          </div>
+        <% } %>
+        <% if (donation.donor_email) { %>
+          <div class="receipt-card__row">
+            <span class="receipt-card__label">E-mail</span>
+            <span class="receipt-card__value"><%= donation.donor_email %></span>
+          </div>
+        <% } %>
+
+        <% if (donation.payment_method === 'pix') { %>
+          <div class="receipt-card__divider"></div>
+
+          <% if (pixKey) { %>
+            <div class="receipt-card__pix">
+              <p class="receipt-card__pix-label">Chave PIX da ONG</p>
+              <div class="receipt-card__pix-key">
+                <span id="pixKeyValue"><%= pixKey %></span>
+                <button type="button" class="btn btn--outline btn--sm" onclick="copyPix()">📋 Copiar</button>
+              </div>
+            </div>
+          <% } %>
+
+          <% if (donation.receipt_image) { %>
+            <div class="receipt-card__divider"></div>
+            <div class="receipt-card__attachment">
+              <p class="receipt-card__pix-label">Comprovante Enviado</p>
+              <a href="<%= donation.receipt_image %>" target="_blank" class="btn btn--outline btn--sm">📎 Ver Comprovante</a>
+            </div>
+          <% } else if (donation.status === 'pending_payment') { %>
+            <div class="receipt-card__divider"></div>
+            <div class="receipt-card__upload">
+              <p class="receipt-card__pix-label">Enviar Comprovante do PIX</p>
+              <form method="POST" action="/donate/receipt/<%= donation.receipt_code %>/upload" enctype="multipart/form-data" class="receipt-upload-form">
+                <input type="file" name="receipt_image" accept="image/jpeg,image/png,image/webp,application/pdf" required>
+                <button type="submit" class="btn btn--primary btn--sm">📤 Enviar Comprovante</button>
+              </form>
+              <span class="form__hint" style="margin-top: var(--space-2); display: block;">JPG, PNG, WebP ou PDF (máx. 5MB)</span>
+            </div>
+          <% } %>
+        <% } %>
+      </div>
+
+      <div class="receipt-card__footer">
+        <% if (projectEmail) { %>
+          <p>📧 Contato: <strong><%= projectEmail %></strong></p>
+        <% } %>
+        <p>🐾 ONG Love Patinhas — Adota Pet</p>
+      </div>
+    </div>
+
+    <div class="receipt-actions">
+      <button class="btn btn--outline btn--lg" onclick="window.print()">🖨️ Imprimir Comprovante</button>
+      <a href="/donate" class="btn btn--primary btn--lg">💛 Fazer Nova Doação</a>
+      <a href="/" class="btn btn--outline btn--lg">← Voltar ao Site</a>
+    </div>
+  </div>
+</section>
+
+<script>
+  function copyPix() {
+    var pixKey = document.getElementById('pixKeyValue');
+    if (!pixKey) return;
+    navigator.clipboard.writeText(pixKey.textContent).then(function() {
+      alert('Chave PIX copiada!');
+    }).catch(function() {
+      var textArea = document.createElement('textarea');
+      textArea.value = pixKey.textContent;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Chave PIX copiada!');
+    });
+  }
+</script>
+
+<%- include('../layout-footer') %>

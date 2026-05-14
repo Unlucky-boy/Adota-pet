@@ -7,6 +7,11 @@ const path = require('path');
 const authRoutes = require('./routes/auth');
 const petsRoutes = require('./routes/pets');
 const adoptionsRoutes = require('./routes/adoptions');
+const adoptersRoutes = require('./routes/adopters');
+const donationsRoutes = require('./routes/donations');
+const volunteersRoutes = require('./routes/volunteers');
+const visitsRoutes = require('./routes/visits');
+const settingsRoutes = require('./routes/settings');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,6 +51,11 @@ app.use((req, res, next) => {
 app.use('/', authRoutes);
 app.use('/', petsRoutes);
 app.use('/', adoptionsRoutes);
+app.use('/', adoptersRoutes);
+app.use('/', donationsRoutes);
+app.use('/', volunteersRoutes);
+app.use('/', visitsRoutes);
+app.use('/', settingsRoutes);
 
 // 404
 app.use((req, res) => {

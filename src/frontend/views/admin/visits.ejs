@@ -1,0 +1,104 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <div class="admin-header">
+      <h1>📅 Agendamentos de Visita</h1>
+      <a href="/admin/visits/new" class="btn btn--primary">+ Agendar Visita</a>
+    </div>
+
+    <% if (visits.length === 0) { %>
+      <div class="empty-state">
+        <span class="empty-state__icon">📅</span>
+        <h3>Nenhuma visita agendada</h3>
+        <p>Clique em "Agendar Visita" para criar o primeiro agendamento.</p>
+      </div>
+    <% } else { %>
+      <div class="table-container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Adotante</th>
+              <th>Pet</th>
+              <th>Data / Hora</th>
+              <th>Tipo</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% visits.forEach(function(visit) { %>
+              <%
+                const visitDate = new Date(visit.visit_date).toLocaleDateString('pt-BR');
+                const visitTime = visit.visit_time.substring(0, 5);
+                const typeLabels = {
+                  home_visit: '🏠 Visita Domiciliar',
+                  interview: '🤝 Entrevista',
+                };
+                const statusLabels = {
+                  scheduled: '📅 Agendada',
+                  completed: '✅ Concluída',
+                  cancelled: '❌ Cancelada',
+                };
+                const statusClass = {
+                  scheduled: 'pending',
+                  completed: 'approved',
+                  cancelled: 'rejected',
+                };
+              %>
+              <tr>
+                <td>#<%= visit.id %></td>
+                <td>
+                  <strong><%= visit.adopter_name %></strong>
+                  <br><small>📧 <%= visit.adopter_email %></small>
+                  <% if (visit.adopter_phone) { %>
+                    <br><small>📱 <%= visit.adopter_phone %></small>
+                  <% } %>
+                </td>
+                <td>
+                  <%= visit.pet_species === 'dog' ? '🐶' : visit.pet_species === 'cat' ? '🐱' : '🐾' %>
+                  <strong><%= visit.pet_name %></strong>
+                </td>
+                <td>
+                  <strong><%= visitDate %></strong>
+                  <br><small>🕐 <%= visitTime %></small>
+                </td>
+                <td><%= typeLabels[visit.visit_type] || visit.visit_type %></td>
+                <td>
+                  <span class="status-badge status-badge--<%= statusClass[visit.status] || visit.status %>">
+                    <%= statusLabels[visit.status] || visit.status %>
+                  </span>
+                  <% if (visit.scheduled_by_name) { %>
+                    <br><small class="review-info">por <%= visit.scheduled_by_name %></small>
+                  <% } %>
+                </td>
+                <td class="table__actions">
+                  <% if (visit.status === 'scheduled') { %>
+                    <form method="POST" action="/admin/visits/<%= visit.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="completed">
+                      <button type="submit" class="btn btn--success btn--sm"
+                              onclick="return confirm('Marcar visita como concluída?')">✓ Concluída</button>
+                    </form>
+                    <form method="POST" action="/admin/visits/<%= visit.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="cancelled">
+                      <button type="submit" class="btn btn--danger btn--sm"
+                              onclick="return confirm('Cancelar esta visita?')">✕ Cancelar</button>
+                    </form>
+                  <% } else { %>
+                    <form method="POST" action="/admin/visits/<%= visit.id %>/status" style="display:inline">
+                      <input type="hidden" name="status" value="scheduled">
+                      <button type="submit" class="btn btn--outline btn--sm">↩ Reagendar</button>
+                    </form>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

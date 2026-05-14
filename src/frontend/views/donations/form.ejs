@@ -1,0 +1,191 @@
+<%- include('../layout-header') %>
+
+<section class="donation-section">
+  <div class="container">
+    <div class="donation-card">
+      <div class="donation-card__header">
+        <span class="donation-card__icon">💛</span>
+        <h1>Faça uma Doação</h1>
+        <p>Sua contribuição ajuda a manter os cuidados com os animais da ONG Love Patinhas</p>
+      </div>
+      <form class="form" method="POST" action="/donate" id="donateForm" enctype="multipart/form-data">
+        <!-- Valor -->
+        <div class="form__group">
+          <label for="donate-amount">Valor da doação (R$) *</label>
+          <div class="amount-input-wrapper">
+            <span class="amount-input-prefix">R$</span>
+            <input
+              type="number"
+              id="donate-amount"
+              name="amount"
+              required
+              min="1"
+              max="100000"
+              step="0.01"
+              placeholder="50.00"
+              value="<%= (formData && formData.amount) ? formData.amount : '' %>"
+            >
+          </div>
+        </div>
+
+        <!-- Valores sugeridos -->
+        <div class="suggested-amounts">
+          <button type="button" class="suggested-amounts__btn" data-value="10">R$ 10</button>
+          <button type="button" class="suggested-amounts__btn" data-value="25">R$ 25</button>
+          <button type="button" class="suggested-amounts__btn" data-value="50">R$ 50</button>
+          <button type="button" class="suggested-amounts__btn" data-value="100">R$ 100</button>
+          <button type="button" class="suggested-amounts__btn" data-value="200">R$ 200</button>
+        </div>
+
+        <!-- Método de pagamento -->
+        <div class="form__group">
+          <label>Método de pagamento *</label>
+          <div class="payment-methods">
+            <label class="payment-method">
+              <input type="radio" name="payment_method" value="pix" required
+                <%= (formData && formData.payment_method === 'pix') ? 'checked' : '' %>
+              >
+              <div class="payment-method__card">
+                <span class="payment-method__icon">📱</span>
+                <span class="payment-method__label">PIX</span>
+                <span class="payment-method__desc">Instantâneo</span>
+              </div>
+            </label>
+            <label class="payment-method">
+              <input type="radio" name="payment_method" value="card"
+                <%= (formData && formData.payment_method === 'card') ? 'checked' : '' %>
+              >
+              <div class="payment-method__card">
+                <span class="payment-method__icon">💳</span>
+                <span class="payment-method__label">Cartão</span>
+                <span class="payment-method__desc">Crédito/Débito</span>
+              </div>
+            </label>
+            <label class="payment-method">
+              <input type="radio" name="payment_method" value="boleto"
+                <%= (formData && formData.payment_method === 'boleto') ? 'checked' : '' %>
+              >
+              <div class="payment-method__card">
+                <span class="payment-method__icon">🏦</span>
+                <span class="payment-method__label">Boleto</span>
+                <span class="payment-method__desc">Até 3 dias úteis</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Bloco PIX: chave + upload de comprovante (aparece ao selecionar PIX) -->
+        <div id="pixSection" class="pix-section" style="display: none;">
+          <% if (pixKey) { %>
+            <div class="pix-info-box">
+              <div class="pix-info-box__header">
+                <span>📱</span>
+                <strong>Chave PIX da ONG</strong>
+              </div>
+              <div class="pix-info-box__key">
+                <code id="pixKeyValue"><%= pixKey %></code>
+                <button type="button" class="btn btn--outline btn--sm" onclick="copyPix()">📋 Copiar</button>
+              </div>
+              <p class="pix-info-box__hint">Faça a transferência e envie o comprovante abaixo</p>
+            </div>
+          <% } else { %>
+            <div class="pix-info-box pix-info-box--warning">
+              <p>⚠️ A chave PIX ainda não foi cadastrada pela ONG. Sua doação será registrada e a chave será informada em breve.</p>
+            </div>
+          <% } %>
+
+          <div class="form__group">
+            <label for="receipt-upload">Comprovante do PIX (opcional)</label>
+            <input
+              type="file"
+              id="receipt-upload"
+              name="receipt_image"
+              accept="image/jpeg,image/png,image/webp,application/pdf"
+            >
+            <span class="form__hint">Formatos aceitos: JPG, PNG, WebP, PDF (máx. 5MB)</span>
+          </div>
+        </div>
+
+        <!-- Dados opcionais do doador -->
+        <div class="form__divider">
+          <span>Dados do doador (opcional)</span>
+        </div>
+        <div class="form__row">
+          <div class="form__group">
+            <label for="donate-name">Nome</label>
+            <input
+              type="text"
+              id="donate-name"
+              name="donor_name"
+              placeholder="Seu nome"
+              value="<%= (formData && formData.donor_name) ? formData.donor_name : '' %>"
+              autocomplete="name"
+            >
+          </div>
+          <div class="form__group">
+            <label for="donate-email">E-mail</label>
+            <input
+              type="email"
+              id="donate-email"
+              name="donor_email"
+              placeholder="seu@email.com"
+              value="<%= (formData && formData.donor_email) ? formData.donor_email : '' %>"
+              autocomplete="email"
+            >
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--lg btn--full">💛 Confirmar Doação</button>
+      </form>
+      <div class="donation-card__footer">
+        <% if (projectEmail) { %>
+          <p>📧 E-mail do projeto: <strong><%= projectEmail %></strong></p>
+        <% } %>
+        <p>🔒 Pagamento simulado — ambiente de demonstração</p>
+        <a href="/">← Voltar para o site</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // === Valores sugeridos ===
+  document.querySelectorAll('.suggested-amounts__btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.getElementById('donate-amount').value = this.dataset.value;
+      document.querySelectorAll('.suggested-amounts__btn').forEach(function(b) {
+        b.classList.remove('suggested-amounts__btn--active');
+      });
+      this.classList.add('suggested-amounts__btn--active');
+    });
+  });
+
+  // === Mostrar/ocultar seção PIX ===
+  var pixSection = document.getElementById('pixSection');
+  var radios = document.querySelectorAll('input[name="payment_method"]');
+  function togglePix() {
+    var selected = document.querySelector('input[name="payment_method"]:checked');
+    pixSection.style.display = (selected && selected.value === 'pix') ? 'block' : 'none';
+  }
+  radios.forEach(function(r) { r.addEventListener('change', togglePix); });
+  togglePix(); // Estado inicial
+
+  // === Copiar chave PIX ===
+  function copyPix() {
+    var pixKey = document.getElementById('pixKeyValue');
+    if (!pixKey) return;
+    navigator.clipboard.writeText(pixKey.textContent).then(function() {
+      alert('Chave PIX copiada!');
+    }).catch(function() {
+      var textArea = document.createElement('textarea');
+      textArea.value = pixKey.textContent;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Chave PIX copiada!');
+    });
+  }
+</script>
+
+<%- include('../layout-footer') %>

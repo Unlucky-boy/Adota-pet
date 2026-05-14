@@ -1,0 +1,96 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <a href="/admin/visits" class="back-link">← Voltar para agendamentos</a>
+
+    <div class="visit-form-card">
+      <div class="visit-form-card__header">
+        <h1>📅 Agendar Visita</h1>
+        <p>Agende uma entrevista ou visita domiciliar para validar a adoção</p>
+      </div>
+
+      <% if (adoptions.length === 0) { %>
+        <div class="empty-state" style="padding: var(--space-8) 0;">
+          <span class="empty-state__icon">📋</span>
+          <h3>Nenhuma adoção disponível</h3>
+          <p>É necessário ter solicitações de adoção pendentes ou aprovadas para agendar visitas.</p>
+          <div style="margin-top: var(--space-4);">
+            <a href="/admin/adoptions" class="btn btn--outline">Ver Adoções</a>
+          </div>
+        </div>
+      <% } else { %>
+        <form class="form" method="POST" action="/admin/visits">
+          <div class="form__group">
+            <label for="visit-adoption">Solicitação de adoção *</label>
+            <select id="visit-adoption" name="adoption_id" required>
+              <option value="">Selecione uma adoção</option>
+              <% adoptions.forEach(function(adoption) { %>
+                <option value="<%= adoption.id %>"
+                  <%= (formData && formData.adoption_id == adoption.id) ? 'selected' : '' %>
+                >
+                  #<%= adoption.id %> — <%= adoption.adopter_name %> → <%= adoption.pet_species === 'dog' ? '🐶' : '🐱' %> <%= adoption.pet_name %>
+                  (<%= adoption.adoption_status === 'pending' ? 'Pendente' : 'Aprovada' %>)
+                </option>
+              <% }); %>
+            </select>
+          </div>
+
+          <div class="form__row">
+            <div class="form__group">
+              <label for="visit-date">Data da visita *</label>
+              <input
+                type="date"
+                id="visit-date"
+                name="visit_date"
+                required
+                value="<%= (formData && formData.visit_date) ? formData.visit_date : '' %>"
+              >
+            </div>
+            <div class="form__group">
+              <label for="visit-time">Horário *</label>
+              <input
+                type="time"
+                id="visit-time"
+                name="visit_time"
+                required
+                value="<%= (formData && formData.visit_time) ? formData.visit_time : '' %>"
+              >
+            </div>
+          </div>
+
+          <div class="form__group">
+            <label for="visit-type">Tipo de visita</label>
+            <select id="visit-type" name="visit_type">
+              <option value="home_visit" <%= (formData && formData.visit_type === 'home_visit') ? 'selected' : '' %>>🏠 Visita Domiciliar</option>
+              <option value="interview" <%= (formData && formData.visit_type === 'interview') ? 'selected' : '' %>>🤝 Entrevista</option>
+            </select>
+          </div>
+
+          <div class="form__group">
+            <label for="visit-notes">Observações (opcional)</label>
+            <textarea
+              id="visit-notes"
+              name="notes"
+              rows="3"
+              placeholder="Anotações sobre a visita, instruções especiais..."
+            ><%= (formData && formData.notes) ? formData.notes : '' %></textarea>
+          </div>
+
+          <div class="form__actions">
+            <a href="/admin/visits" class="btn btn--outline btn--lg">Cancelar</a>
+            <button type="submit" class="btn btn--primary btn--lg">📅 Agendar Visita</button>
+          </div>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Definir data mínima como hoje
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('visit-date').setAttribute('min', today);
+</script>
+
+<%- include('../layout-footer') %>

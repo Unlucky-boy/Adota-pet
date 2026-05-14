@@ -21,11 +21,18 @@
       <ul class="navbar__links">
         <li><a href="/">Início</a></li>
         <li><a href="/pets">Adotar</a></li>
+        <li><a href="/donate" class="navbar__link--donate">💛 Doe Agora</a></li>
+        <li><a href="/volunteer">Voluntarie-se</a></li>
         <% if (user) { %>
           <li><a href="/admin/pets">Gerenciar Pets</a></li>
           <li><a href="/admin/adoptions">Adoções</a></li>
+          <li><a href="/admin/donations">Doações</a></li>
+          <li><a href="/admin/volunteers">Voluntários</a></li>
+          <li><a href="/admin/visits">Visitas</a></li>
+          <li><a href="/admin/settings">⚙️</a></li>
           <li><a href="/logout" class="btn btn--outline btn--sm">Sair</a></li>
         <% } else { %>
+          <li><a href="/register" class="btn btn--outline btn--sm">Cadastre-se</a></li>
           <li><a href="/login" class="btn btn--primary btn--sm">Área ONG</a></li>
         <% } %>
       </ul>
