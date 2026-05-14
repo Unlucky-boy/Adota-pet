@@ -1130,6 +1130,11 @@ h1, h2, h3, h4 {
   color: #721c24;
 }
 
+.status-badge--completed {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
 /* === FOOTER === */
 .footer {
   background: var(--gray-900);

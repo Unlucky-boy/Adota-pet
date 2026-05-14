@@ -49,7 +49,7 @@
                 <td><%= new Date(adoption.created_at).toLocaleDateString('pt-BR') %></td>
                 <td>
                   <span class="status-badge status-badge--<%= adoption.status %>">
-                    <%= adoption.status === 'pending' ? '⏳ Pendente' : adoption.status === 'approved' ? '✅ Aprovada' : '❌ Rejeitada' %>
+                    <%= adoption.status === 'pending' ? '⏳ Pendente' : adoption.status === 'approved' ? '✅ Aprovada' : adoption.status === 'completed' ? '🎉 Adotada' : '❌ Rejeitada' %>
                   </span>
                 </td>
                 <td class="table__actions">
