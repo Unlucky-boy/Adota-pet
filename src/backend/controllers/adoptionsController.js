@@ -3,9 +3,19 @@ const db = require('../config/db');
 const adoptionsController = {
   // POST /adoptions — Enviar solicitação
   async create(req, res) {
-    const { pet_id, adopter_name, adopter_email, adopter_phone, adopter_address, message } = req.body;
+    let { pet_id, adopter_name, adopter_email, adopter_phone, adopter_address, message } = req.body;
 
     try {
+      // Se estiver logado, puxar os dados completos do banco caso não venham no formulário
+      if (req.session.adopter && (!adopter_phone || !adopter_address)) {
+        const adopterData = await db.query('SELECT phone, address FROM adopters WHERE id = $1', [req.session.adopter.id]);
+        if (adopterData.rows.length > 0) {
+          adopter_phone = adopter_phone || adopterData.rows[0].phone;
+          adopter_address = adopter_address || adopterData.rows[0].address;
+          message = message || 'Intenção de adoção registrada via sistema (Usuário Logado).';
+        }
+      }
+
       // Verificar se pet existe e está disponível
       const petResult = await db.query(
         "SELECT * FROM pets WHERE id = $1 AND status = 'available'",
