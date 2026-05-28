@@ -52,9 +52,17 @@
                 <code id="pixKeyValue"><%= pixKey %></code>
                 <button type="button" class="btn btn--outline btn--sm" onclick="copyPix()">📋 Copiar</button>
               </div>
-              <div class="pix-qr-code" style="text-align: center; margin-top: 1rem;">
-                <p style="font-size: 0.9rem; color: #555; margin-bottom: 0.5rem;">QR Code PIX:</p>
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<%= encodeURIComponent(pixKey) %>" alt="QR Code PIX">
+              <div style="text-align: center; margin-top: 1.5rem;">
+                <button type="button" class="btn btn--outline" id="generate-qr-btn">🔄 Gerar QR Code de Pagamento</button>
+              </div>
+
+              <div id="pix-qr-container" style="display: none; text-align: center; margin-top: 1rem; padding: 1rem; background: #fafafa; border-radius: 8px; border: 1px dashed #ccc;">
+                <p style="font-size: 0.9rem; color: #333; margin-bottom: 0.5rem; font-weight: bold;">Escaneie o QR Code ou use o Copia e Cola:</p>
+                <img id="pix-qr-img" src="" alt="QR Code PIX" style="max-width: 200px; height: auto; margin: 0.5rem auto;">
+                <div style="margin-top: 1rem;">
+                  <code id="pixPayloadValue" style="display:block; word-break: break-all; font-size: 0.75rem; color: #666; margin-bottom: 0.5rem; background: #fff; padding: 0.5rem; border: 1px solid #eee;"></code>
+                  <button type="button" class="btn btn--sm" style="background: #28a745; color: white; border: none; margin-top: 0.5rem;" onclick="copyPixPayload()">📋 Copiar Código PIX</button>
+                </div>
               </div>
               <p class="pix-info-box__hint">Faça a transferência e envie o comprovante abaixo</p>
             </div>
@@ -124,13 +132,86 @@
   document.querySelectorAll('.suggested-amounts__btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
       if (this.hasAttribute('disabled')) return;
-      document.getElementById('donate-amount').value = this.dataset.value;
-      document.querySelectorAll('.suggested-amounts__btn').forEach(function(b) {
-        b.classList.remove('suggested-amounts__btn--active');
-      });
-      this.classList.add('suggested-amounts__btn--active');
+      var input = document.getElementById('donate-amount');
+      var currentVal = parseFloat(input.value) || 0;
+      var addVal = parseFloat(this.dataset.value);
+      input.value = (currentVal + addVal).toFixed(2);
+      
+      // Efeito visual rápido
+      var originalTransform = this.style.transform;
+      this.style.transform = 'scale(0.95)';
+      setTimeout(() => this.style.transform = originalTransform || 'scale(1)', 100);
     });
   });
+
+  // === Gerador de PIX Payload (EMV) ===
+  function generatePixPayload(key, amount, merchantName, merchantCity) {
+      let payload = "000201";
+      let gui = "0014br.gov.bcb.pix";
+      let keyStr = "01" + key.length.toString().padStart(2, '0') + key;
+      let accInfo = gui + keyStr;
+      payload += "26" + accInfo.length.toString().padStart(2, '0') + accInfo;
+      payload += "52040000";
+      payload += "5303986";
+      if (amount && parseFloat(amount) > 0) {
+          let amountStr = parseFloat(amount).toFixed(2);
+          payload += "54" + amountStr.length.toString().padStart(2, '0') + amountStr;
+      }
+      payload += "5802BR";
+      merchantName = merchantName.substring(0, 25).toUpperCase().padEnd(2, ' ').trim() || "ONG";
+      payload += "59" + merchantName.length.toString().padStart(2, '0') + merchantName;
+      merchantCity = merchantCity.substring(0, 15).toUpperCase().padEnd(2, ' ').trim() || "CIDADE";
+      payload += "60" + merchantCity.length.toString().padStart(2, '0') + merchantCity;
+      let txid = "***";
+      let addData = "05" + txid.length.toString().padStart(2, '0') + txid;
+      payload += "62" + addData.length.toString().padStart(2, '0') + addData;
+      payload += "6304";
+      let crc = 0xFFFF;
+      for (let i = 0; i < payload.length; i++) {
+          crc ^= payload.charCodeAt(i) << 8;
+          for (let j = 0; j < 8; j++) {
+              if ((crc & 0x8000) !== 0) {
+                  crc = (crc << 1) ^ 0x1021;
+              } else {
+                  crc = crc << 1;
+              }
+          }
+      }
+      return payload + (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+  }
+
+  var generateBtn = document.getElementById('generate-qr-btn');
+  if (generateBtn) {
+    generateBtn.addEventListener('click', function() {
+      var amount = document.getElementById('donate-amount').value;
+      if (!amount || parseFloat(amount) <= 0) {
+        alert('Por favor, informe um valor válido para gerar o QR Code.');
+        document.getElementById('donate-amount').focus();
+        return;
+      }
+      var pixKey = document.getElementById('pixKeyValue').textContent.trim();
+      var payload = generatePixPayload(pixKey, amount, "ONG Love Patinhas", "SAO PAULO");
+      
+      document.getElementById('pixPayloadValue').textContent = payload;
+      document.getElementById('pix-qr-img').src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=" + encodeURIComponent(payload);
+      document.getElementById('pix-qr-container').style.display = 'block';
+    });
+  }
+
+  function copyPixPayload() {
+    var payloadText = document.getElementById('pixPayloadValue').textContent;
+    navigator.clipboard.writeText(payloadText).then(function() {
+      alert('Código PIX Copia e Cola copiado com sucesso!');
+    }).catch(function() {
+      var textArea = document.createElement('textarea');
+      textArea.value = payloadText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Código PIX Copia e Cola copiado!');
+    });
+  }
 
   // === Copiar chave PIX ===
   function copyPix() {
