@@ -77,41 +77,55 @@
     <% if (pet.status === 'available') { %>
     <!-- Formulário de Adoção -->
     <div class="adoption-form-section" id="adotar">
-      <h2>Formulário de Adoção</h2>
-      <form class="form" method="POST" action="/adoptions">
-        <input type="hidden" name="pet_id" value="<%= pet.id %>">
+      <% if (typeof adopter !== 'undefined' && adopter) { %>
+        <h2>Quer adotar o <%= pet.name %>?</h2>
+        <p>Você já está logado. Clique no botão abaixo para registrar sua intenção de adoção e nós entraremos em contato!</p>
+        <form class="form" method="POST" action="/adoptions">
+          <input type="hidden" name="pet_id" value="<%= pet.id %>">
+          <input type="hidden" name="adopter_name" value="<%= adopter.name %>">
+          <input type="hidden" name="adopter_email" value="<%= adopter.email %>">
+          <!-- O backend deve ser ajustado para aceitar sem telefone/endereço obrigatório, ou pegá-los do adopter no DB -->
+          <button type="submit" class="btn btn--primary btn--lg btn--full" style="margin-top: 1rem;">
+            🐾 Registrar Intenção de Adoção
+          </button>
+        </form>
+      <% } else { %>
+        <h2>Formulário de Adoção</h2>
+        <form class="form" method="POST" action="/adoptions">
+          <input type="hidden" name="pet_id" value="<%= pet.id %>">
 
-        <div class="form__row">
-          <div class="form__group">
-            <label for="adopter_name">Nome completo *</label>
-            <input type="text" id="adopter_name" name="adopter_name" required placeholder="Seu nome completo">
+          <div class="form__row">
+            <div class="form__group">
+              <label for="adopter_name">Nome completo *</label>
+              <input type="text" id="adopter_name" name="adopter_name" required placeholder="Seu nome completo">
+            </div>
+            <div class="form__group">
+              <label for="adopter_email">E-mail *</label>
+              <input type="email" id="adopter_email" name="adopter_email" required placeholder="seu@email.com">
+            </div>
           </div>
-          <div class="form__group">
-            <label for="adopter_email">E-mail *</label>
-            <input type="email" id="adopter_email" name="adopter_email" required placeholder="seu@email.com">
-          </div>
-        </div>
 
-        <div class="form__row">
-          <div class="form__group">
-            <label for="adopter_phone">Telefone</label>
-            <input type="tel" id="adopter_phone" name="adopter_phone" placeholder="(82) 99999-9999">
+          <div class="form__row">
+            <div class="form__group">
+              <label for="adopter_phone">Telefone</label>
+              <input type="tel" id="adopter_phone" name="adopter_phone" placeholder="(82) 99999-9999">
+            </div>
+            <div class="form__group">
+              <label for="adopter_address">Endereço</label>
+              <input type="text" id="adopter_address" name="adopter_address" placeholder="Seu endereço completo">
+            </div>
           </div>
+
           <div class="form__group">
-            <label for="adopter_address">Endereço</label>
-            <input type="text" id="adopter_address" name="adopter_address" placeholder="Seu endereço completo">
+            <label for="message">Por que você quer adotar <%= pet.name %>?</label>
+            <textarea id="message" name="message" rows="4" placeholder="Conte um pouco sobre você e por que deseja adotar este pet..."></textarea>
           </div>
-        </div>
 
-        <div class="form__group">
-          <label for="message">Por que você quer adotar <%= pet.name %>?</label>
-          <textarea id="message" name="message" rows="4" placeholder="Conte um pouco sobre você e por que deseja adotar este pet..."></textarea>
-        </div>
-
-        <button type="submit" class="btn btn--primary btn--lg btn--full">
-          🐾 Enviar Solicitação de Adoção
-        </button>
-      </form>
+          <button type="submit" class="btn btn--primary btn--lg btn--full">
+            🐾 Enviar Solicitação de Adoção
+          </button>
+        </form>
+      <% } %>
     </div>
     <% } %>
   </div>
