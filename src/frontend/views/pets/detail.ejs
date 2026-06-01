@@ -6,7 +6,7 @@
 
     <div class="pet-detail__grid">
       <div class="pet-detail__image">
-        <img src="/pets/<%= pet.id %>/image" alt="<%= pet.name %>"
+        <img src="<%= pet.image_url || '/img/default-pet.png' %>" alt="<%= pet.name %>"
              onerror="this.src='/img/pets/default.jpg'">
         <% if (pet.status !== 'available') { %>
           <div class="pet-detail__overlay">
