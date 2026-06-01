@@ -38,7 +38,7 @@ const dashboardController = {
 
       // Carregar solicitações de adoção e visitas agendadas
       const adoptionsResult = await db.query(
-        `SELECT a.*, p.name as pet_name, 
+        `SELECT a.*, p.name as pet_name, p.image_url as pet_image_url, 
                 v.visit_date, v.visit_time, v.status as visit_status 
          FROM adoptions a
          LEFT JOIN pets p ON a.pet_id = p.id
