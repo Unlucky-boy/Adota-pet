@@ -22,8 +22,7 @@ CREATE TABLE IF NOT EXISTS pets (
   size VARCHAR(20),
   gender VARCHAR(10),
   description TEXT,
-  image_data BYTEA,
-  image_mime_type VARCHAR(50),
+  image_url TEXT,
   vaccinated BOOLEAN DEFAULT FALSE,
   neutered BOOLEAN DEFAULT FALSE,
   status VARCHAR(20) DEFAULT 'available',
@@ -54,29 +53,35 @@ INSERT INTO users (name, email, password_hash) VALUES
 ON CONFLICT (email) DO NOTHING;
 
 -- Pets de exemplo
-INSERT INTO pets (name, species, breed, age_months, size, gender, description, vaccinated, neutered, status) VALUES
+INSERT INTO pets (name, species, breed, age_months, size, gender, description, image_url, vaccinated, neutered, status) VALUES
   ('Thor', 'dog', 'Vira-lata', 24, 'large', 'male',
    'Thor é um cachorro muito dócil e brincalhão. Adora crianças e se dá bem com outros animais. Está vacinado e castrado, pronto para um lar cheio de amor!',
+   'https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=800',
    TRUE, TRUE, 'available'),
 
   ('Luna', 'cat', 'Siamês', 12, 'small', 'female',
    'Luna é uma gatinha independente mas muito carinhosa. Gosta de ficar no colo e ronrona alto. Ideal para apartamento.',
+   'https://images.unsplash.com/photo-1513360371669-4adf3dd7dff8?auto=format&fit=crop&q=80&w=800',
    TRUE, TRUE, 'available'),
 
   ('Bob', 'dog', 'Labrador', 6, 'large', 'male',
    'Bob é um filhote cheio de energia! Precisa de espaço para correr e brincar. Muito inteligente e aprende rápido.',
+   'https://images.metroimg.com/2020/03/05102915/lad.jpg',
    TRUE, FALSE, 'available'),
 
   ('Mel', 'cat', 'Persa', 36, 'medium', 'female',
    'Mel é uma gata calma e elegante. Perfeita para pessoas que buscam uma companhia tranquila. Muito bem cuidada.',
+   'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=800',
    TRUE, TRUE, 'available'),
 
   ('Rex', 'dog', 'Pastor Alemão', 18, 'large', 'male',
    'Rex é um cão leal e protetor. Foi resgatado de situação de maus-tratos e agora busca um lar definitivo.',
+   'https://midias.correio24horas.com.br/2024/02/28/edicaseo-pastor-alemao-e-um-otimo-companheiro-para-diversas-atividades-imagem-anna-titova--shutterstock-rb5hiu.jpg',
    TRUE, TRUE, 'available'),
 
   ('Mia', 'cat', 'Vira-lata', 8, 'small', 'female',
    'Mia é uma gatinha muito brincalhona e ativa. Adora brinquedos e é ótima com crianças.',
+   'https://images.unsplash.com/photo-1548247416-ec66f4900b2e?auto=format&fit=crop&q=80&w=800',
    FALSE, FALSE, 'available')
 ON CONFLICT DO NOTHING;
 
