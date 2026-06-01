@@ -23,14 +23,13 @@ const upload = multer({
 router.get('/', petsController.home);
 router.get('/pets', petsController.list);
 router.get('/pets/:id', petsController.detail);
-router.get('/pets/:id/image', petsController.image);
 
 // Rotas admin (protegidas)
 router.get('/admin/pets', isAuthenticated, petsController.adminList);
 router.get('/admin/pets/new', isAuthenticated, petsController.newForm);
-router.post('/admin/pets', isAuthenticated, upload.single('image'), petsController.create);
+router.post('/admin/pets', isAuthenticated, petsController.create);
 router.get('/admin/pets/:id/edit', isAuthenticated, petsController.editForm);
-router.post('/admin/pets/:id', isAuthenticated, upload.single('image'), petsController.update);
+router.post('/admin/pets/:id', isAuthenticated, petsController.update);
 router.post('/admin/pets/:id/delete', isAuthenticated, petsController.delete);
 
 // API JSON (para modais)
