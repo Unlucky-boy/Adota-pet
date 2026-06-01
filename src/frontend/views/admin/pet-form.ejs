@@ -6,8 +6,7 @@
     <h1><%= pet ? 'Editar ' + pet.name : 'Cadastrar Novo Pet' %></h1>
 
     <form class="form form--card" method="POST"
-          action="<%= pet ? '/admin/pets/' + pet.id : '/admin/pets' %>"
-          enctype="multipart/form-data">
+          action="<%= pet ? '/admin/pets/' + pet.id : '/admin/pets' %>">
 
       <div class="form__row">
         <div class="form__group">
@@ -66,11 +65,8 @@
       </div>
 
       <div class="form__group">
-        <label for="image">Foto do pet</label>
-        <input type="file" id="image" name="image" accept="image/jpeg,image/png,image/webp">
-        <% if (pet) { %>
-          <p class="form__hint">Foto atual disponível</p>
-        <% } %>
+        <label for="image">Link da Foto do pet</label>
+        <input type="url" id="image" name="image_url" value="<%= pet ? pet.image_url || '' : '' %>" placeholder="Ex: https://images.unsplash.com/...">
       </div>
 
       <div class="form__row">
