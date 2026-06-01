@@ -73,7 +73,7 @@
                 <% userAdoptions.forEach(function(a) { %>
                   <tr style="border-bottom: 1px solid var(--gray-100);">
                     <td style="padding: 1rem; display: flex; align-items: center; gap: 1rem;">
-                        <img src="/pets/<%= a.pet_id %>/image" alt="<%= a.pet_name %>" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        <img src="<%= a.pet_image_url || '/img/default-pet.png' %>" alt="<%= a.pet_name %>" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                       <strong><%= a.pet_name %></strong>
                     </td>
                     <td style="padding: 1rem;"><%= new Date(a.created_at).toLocaleDateString('pt-BR') %></td>
