@@ -63,7 +63,7 @@
       <button class="modal__close" onclick="closeModal('createModal')">&times;</button>
     </div>
     <div class="modal__body">
-      <form class="form" method="POST" action="/admin/pets" enctype="multipart/form-data">
+      <form class="form" method="POST" action="/admin/pets">
         <div class="form__row">
           <div class="form__group">
             <label for="create-name">Nome do pet *</label>
@@ -113,8 +113,8 @@
           <textarea id="create-description" name="description" rows="3" placeholder="Personalidade, história do pet..."></textarea>
         </div>
         <div class="form__group">
-          <label for="create-image">Foto do pet</label>
-          <input type="file" id="create-image" name="image" accept="image/jpeg,image/png,image/webp">
+          <label for="create-image">Link da Foto do pet</label>
+          <input type="url" id="create-image" name="image_url" placeholder="Ex: https://...">
         </div>
         <div class="form__row">
           <div class="form__group form__group--checkbox">
@@ -141,7 +141,7 @@
       <button class="modal__close" onclick="closeModal('editModal')">&times;</button>
     </div>
     <div class="modal__body">
-      <form class="form" id="editForm" method="POST" action="" enctype="multipart/form-data">
+      <form class="form" id="editForm" method="POST" action="">
         <div class="form__row">
           <div class="form__group">
             <label for="edit-name">Nome do pet *</label>
@@ -188,9 +188,8 @@
           <textarea id="edit-description" name="description" rows="3"></textarea>
         </div>
         <div class="form__group">
-          <label for="edit-image">Nova foto (opcional)</label>
-          <input type="file" id="edit-image" name="image" accept="image/jpeg,image/png,image/webp">
-          <p class="form__hint" id="edit-image-hint"></p>
+          <label for="edit-image">Link da Foto do pet</label>
+          <input type="url" id="edit-image" name="image_url" placeholder="Ex: https://...">
         </div>
         <div class="form__row">
           <div class="form__group form__group--checkbox">
@@ -293,7 +292,7 @@
       document.getElementById('edit-vaccinated').checked = pet.vaccinated;
       document.getElementById('edit-neutered').checked = pet.neutered;
       document.getElementById('edit-status').value = pet.status || 'available';
-      document.getElementById('edit-image-hint').textContent = 'Foto atual disponível';
+      document.getElementById('edit-image').value = pet.image_url || '';
 
       openModal('editModal');
     } catch (err) {
