@@ -1,6 +1,6 @@
 <a href="/pets/<%= pet.id %>" class="pet-card" data-species="<%= pet.species %>">
   <div class="pet-card__image">
-    <img src="/pets/<%= pet.id %>/image" alt="<%= pet.name %>" loading="lazy"
+    <img src="<%= pet.image_url || '/img/default-pet.png' %>" alt="<%= pet.name %>" loading="lazy"
          onerror="this.src='/img/pets/default.jpg'">
     <span class="pet-card__badge pet-card__badge--<%= pet.species %>">
       <%= pet.species === 'dog' ? '🐶 Cachorro' : pet.species === 'cat' ? '🐱 Gato' : '🐾 Outro' %>
