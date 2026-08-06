@@ -6,7 +6,7 @@ Plataforma web para facilitar o processo de adoção de animais da **ONG Love Pa
 
 Sistema que permite à ONG cadastrar animais disponíveis para adoção e a pessoas interessadas visualizar, filtrar e solicitar a adoção de forma simples e intuitiva.
 
-## 👥 Equipe — ACE6
+## 👥 Equipe — ACE7
 
 | Nome | Papel (Sprint 2) |
 |------|-----------------|
@@ -164,4 +164,4 @@ Acompanhe o backlog e o andamento das sprints na aba [Projects](../../projects) 
 
 ## 📄 Licença
 
-MIT © 2026 Equipe ACE6 — ONG Love Patinhas
+MIT © 2026 Equipe ACE7 — ONG Love Patinhas
