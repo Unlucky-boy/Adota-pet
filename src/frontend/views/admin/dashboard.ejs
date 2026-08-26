@@ -1,0 +1,92 @@
+<%- include('../layout-header') %>
+
+<section class="analytics-section">
+  <div class="container">
+    <header class="analytics-hero">
+      <div>
+        <p class="analytics-eyebrow">Visão geral da ONG</p>
+        <h1>Dashboard analítico</h1>
+        <p class="analytics-intro">Acompanhe o fluxo de adoções, o cuidado com os pets e o impacto das doações em um só lugar.</p>
+      </div>
+      <a href="/admin/adoptions" class="btn btn--outline">Ver solicitações <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <div class="analytics-kpis">
+      <article class="analytics-kpi analytics-kpi--orange">
+        <div class="analytics-kpi__top"><span class="analytics-kpi__icon" aria-hidden="true">🐾</span><span>Pets cadastrados</span></div>
+        <strong><%= petStats.total %></strong>
+        <small><%= petStats.available %> disponíveis para adoção</small>
+      </article>
+      <article class="analytics-kpi analytics-kpi--teal">
+        <div class="analytics-kpi__top"><span class="analytics-kpi__icon" aria-hidden="true">🏠</span><span>Adoções aprovadas</span></div>
+        <strong><%= adoptionStats.approved %></strong>
+        <small><%= adoptionStats.pending %> aguardando análise</small>
+      </article>
+      <article class="analytics-kpi analytics-kpi--gold">
+        <div class="analytics-kpi__top"><span class="analytics-kpi__icon" aria-hidden="true">✦</span><span>Doações confirmadas</span></div>
+        <strong><%= Number(donationStats.confirmed).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+        <small><%= donationStats.pending %> aguardando confirmação</small>
+      </article>
+      <article class="analytics-kpi analytics-kpi--blue">
+        <div class="analytics-kpi__top"><span class="analytics-kpi__icon" aria-hidden="true">◷</span><span>Visitas agendadas</span></div>
+        <strong><%= visitStats.scheduled %></strong>
+        <small><%= visitStats.completed %> visitas concluídas</small>
+      </article>
+    </div>
+
+    <div class="analytics-grid">
+      <article class="analytics-panel analytics-panel--distribution">
+        <div class="analytics-panel__header">
+          <div><p class="analytics-label">Composição do abrigo</p><h2>Pets por espécie</h2></div>
+          <span class="analytics-total"><%= petStats.total %> no total</span>
+        </div>
+        <% const speciesLabels = { dog: 'Cachorros', cat: 'Gatos', other: 'Outros' }; %>
+        <% const speciesIcons = { dog: '🐶', cat: '🐱', other: '🐾' }; %>
+        <% speciesStats.forEach(function(item) { %>
+          <% const percentage = petStats.total ? Math.round((item.count / petStats.total) * 100) : 0; %>
+          <div class="distribution-row">
+            <div class="distribution-row__label"><span><%= speciesIcons[item.species] || '🐾' %> <%= speciesLabels[item.species] || item.species %></span><strong><%= item.count %></strong></div>
+            <div class="distribution-bar"><span style="width: <%= percentage %>%"></span></div>
+          </div>
+        <% }); %>
+        <% if (speciesStats.length === 0) { %><p class="analytics-empty">Ainda não há pets cadastrados.</p><% } %>
+      </article>
+
+      <article class="analytics-panel analytics-panel--funnel">
+        <div class="analytics-panel__header"><div><p class="analytics-label">Funil de adoção</p><h2>Status das solicitações</h2></div></div>
+        <div class="funnel-list">
+          <div><span><i class="funnel-dot funnel-dot--pending"></i>Pendentes</span><strong><%= adoptionStats.pending %></strong></div>
+          <div><span><i class="funnel-dot funnel-dot--approved"></i>Aprovadas ou concluídas</span><strong><%= adoptionStats.approved %></strong></div>
+          <div><span><i class="funnel-dot funnel-dot--rejected"></i>Rejeitadas</span><strong><%= adoptionStats.rejected %></strong></div>
+        </div>
+        <a href="/admin/adoptions" class="panel-link">Gerenciar adoções <span aria-hidden="true">→</span></a>
+      </article>
+
+      <article class="analytics-panel analytics-panel--recent">
+        <div class="analytics-panel__header"><div><p class="analytics-label">Acompanhamento</p><h2>Solicitações recentes</h2></div><span class="analytics-total"><%= adoptionStats.total %> solicitações</span></div>
+        <% const adoptionLabels = { pending: 'Pendente', approved: 'Aprovada', rejected: 'Rejeitada', completed: 'Concluída' }; %>
+        <% if (recentAdoptions.length > 0) { %>
+          <div class="recent-list">
+            <% recentAdoptions.forEach(function(adoption) { %>
+              <div class="recent-item">
+                <div class="recent-item__avatar"><%= adoption.adopter_name.charAt(0).toUpperCase() %></div>
+                <div class="recent-item__body"><strong><%= adoption.adopter_name %></strong><span><%= adoption.pet_name %> · <%= new Date(adoption.created_at).toLocaleDateString('pt-BR') %></span></div>
+                <span class="status-badge status-badge--<%= adoption.status %>"><%= adoptionLabels[adoption.status] || adoption.status %></span>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %><p class="analytics-empty">Nenhuma solicitação registrada ainda.</p><% } %>
+      </article>
+
+      <article class="analytics-panel analytics-panel--operations">
+        <div class="analytics-panel__header"><div><p class="analytics-label">Pessoas que ajudam</p><h2>Operação da ONG</h2></div></div>
+        <div class="operation-stat"><span>Voluntários cadastrados</span><strong><%= volunteerStats.total %></strong></div>
+        <div class="operation-stat"><span>Voluntários aprovados</span><strong><%= volunteerStats.approved %></strong></div>
+        <div class="operation-stat"><span>Visitas realizadas</span><strong><%= visitStats.completed %></strong></div>
+        <div class="operation-stat"><span>Pets reservados</span><strong><%= petStats.reserved %></strong></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

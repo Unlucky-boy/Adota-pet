@@ -59,6 +59,7 @@ app.use('/', volunteersRoutes);
 app.use('/', visitsRoutes);
 app.use('/', settingsRoutes);
 app.use('/dashboard', dashboardRoutes);
+app.use('/', dashboardRoutes);
 
 // 404
 app.use((req, res) => {

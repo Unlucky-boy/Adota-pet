@@ -1,6 +1,59 @@
 const db = require('../config/db');
 
 const dashboardController = {
+  async adminAnalytics(req, res) {
+    try {
+      const [petsResult, adoptionsResult, donationsResult, volunteersResult, visitsResult, speciesResult, recentAdoptionsResult] = await Promise.all([
+        db.query(`SELECT COUNT(*)::int AS total,
+                         COUNT(*) FILTER (WHERE status = 'available')::int AS available,
+                         COUNT(*) FILTER (WHERE status = 'reserved')::int AS reserved,
+                         COUNT(*) FILTER (WHERE status = 'adopted')::int AS adopted
+                  FROM pets`),
+        db.query(`SELECT COUNT(*)::int AS total,
+                         COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
+                         COUNT(*) FILTER (WHERE status IN ('approved', 'completed'))::int AS approved,
+                         COUNT(*) FILTER (WHERE status = 'rejected')::int AS rejected
+                  FROM adoptions`),
+        db.query(`SELECT COUNT(*)::int AS total,
+                         COALESCE(SUM(amount) FILTER (WHERE status = 'completed'), 0)::numeric AS confirmed,
+                         COUNT(*) FILTER (WHERE status IN ('pending_payment', 'pending_review'))::int AS pending
+                  FROM donations`),
+        db.query(`SELECT COUNT(*)::int AS total,
+                         COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
+                         COUNT(*) FILTER (WHERE status = 'approved')::int AS approved
+                  FROM volunteers`),
+        db.query(`SELECT COUNT(*)::int AS total,
+                         COUNT(*) FILTER (WHERE status = 'scheduled')::int AS scheduled,
+                         COUNT(*) FILTER (WHERE status = 'completed')::int AS completed
+                  FROM visits`),
+        db.query(`SELECT species, COUNT(*)::int AS count
+                  FROM pets
+                  GROUP BY species
+                  ORDER BY count DESC`),
+        db.query(`SELECT a.id, a.adopter_name, a.status, a.created_at, p.name AS pet_name
+                  FROM adoptions a
+                  JOIN pets p ON p.id = a.pet_id
+                  ORDER BY a.created_at DESC
+                  LIMIT 6`),
+      ]);
+
+      res.render('admin/dashboard', {
+        title: 'Dashboard Analítico — Adota Pet',
+        petStats: petsResult.rows[0],
+        adoptionStats: adoptionsResult.rows[0],
+        donationStats: donationsResult.rows[0],
+        volunteerStats: volunteersResult.rows[0],
+        visitStats: visitsResult.rows[0],
+        speciesStats: speciesResult.rows,
+        recentAdoptions: recentAdoptionsResult.rows,
+      });
+    } catch (err) {
+      console.error('Erro ao carregar dashboard analítico:', err);
+      req.session.error = 'Não foi possível carregar o dashboard analítico.';
+      res.redirect('/admin/pets');
+    }
+  },
+
   async index(req, res) {
     if (!req.session.adopter) {
       req.session.error = 'Por favor, faça login para acessar o painel.';
