@@ -4,6 +4,17 @@
   <div class="container">
     <div class="admin-header"><div><p class="analytics-eyebrow">Operação</p><h1><i data-lucide="clipboard-plus" aria-hidden="true"></i> Gestão da ONG</h1><p>Saúde dos pets, insumos, acolhimentos, voluntariado e despesas.</p></div></div>
 
+    <div class="operations-summary" aria-label="Resumo da operação">
+      <div class="operations-summary__item"><strong><%= pets.length %></strong><span>Pets cadastrados</span></div>
+      <div class="operations-summary__item"><strong><%= healthRecords.length %></strong><span>Registros veterinários</span></div>
+      <div class="operations-summary__item"><strong><%= inventory.length %></strong><span>Itens de estoque</span></div>
+      <div class="operations-summary__item"><strong><%= assignments.length %></strong><span>Acolhimentos ativos</span></div>
+      <div class="operations-summary__item"><strong><%= expenses.length %></strong><span>Despesas recentes</span></div>
+    </div>
+
+    <details class="operations-section">
+      <summary><span><i data-lucide="plus-circle" aria-hidden="true"></i><strong>Registrar e agendar</strong><small>Saúde, estoque, lares, voluntários e despesas</small></span><i data-lucide="chevron-down" class="operations-section__chevron" aria-hidden="true"></i></summary>
+      <div class="operations-section__body">
     <div class="admin-grid admin-grid--two">
       <article class="panel-card"><h2>Registro veterinário</h2><form method="POST" action="/admin/operations/health" class="form">
         <label>Pet<select name="pet_id" required><option value="">Selecione</option><% pets.forEach(function(p) { %><option value="<%= p.id %>"><%= p.name %></option><% }); %></select></label>
@@ -39,7 +50,12 @@
     </div>
 
     <article class="panel-card"><h2>Registrar despesa</h2><form method="POST" action="/admin/operations/expenses" class="form form--inline"><label>Categoria<input name="category" required></label><label>Descrição<input name="description" required></label><label>Valor<input type="number" name="amount" min="0.01" step="0.01" required></label><label>Data<input type="date" name="expense_date"></label><label>Fornecedor<input name="vendor"></label><button class="btn btn--primary" type="submit">Registrar</button></form></article>
+      </div>
+    </details>
 
+    <details class="operations-section">
+      <summary><span><i data-lucide="layout-list" aria-hidden="true"></i><strong>Acompanhar operação</strong><small>Históricos, vacinas, acolhimentos, despesas e auditoria</small></span><i data-lucide="chevron-down" class="operations-section__chevron" aria-hidden="true"></i></summary>
+      <div class="operations-section__body">
     <div class="admin-grid admin-grid--two panel-card--spaced">
       <article class="panel-card"><h2>Histórico veterinário recente</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Pet</th><th scope="col">Tipo</th><th scope="col">Descrição</th><th scope="col">Custo</th></tr></thead><tbody><% healthRecords.forEach(function(h) { %><tr><td><%= new Date(h.record_date).toLocaleDateString('pt-BR') %></td><td><%= h.pet_name %></td><td><%= h.record_type %></td><td><%= h.description %></td><td><%= Number(h.cost).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></td></tr><% }); %></tbody></table></div></article>
       <article class="panel-card"><h2>Pets em lares temporários</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Pet</th><th scope="col">Lar</th><th scope="col">Início</th><th scope="col">Fim</th></tr></thead><tbody><% assignments.forEach(function(a) { %><tr><td><%= a.pet_name %></td><td><%= a.foster_name %></td><td><%= new Date(a.start_date).toLocaleDateString('pt-BR') %></td><td><%= a.end_date ? new Date(a.end_date).toLocaleDateString('pt-BR') : 'Em andamento' %></td></tr><% }); %></tbody></table></div></article>
@@ -54,7 +70,51 @@
 
     <article class="panel-card panel-card--spaced"><h2>Despesas recentes</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Categoria</th><th scope="col">Descrição</th><th scope="col">Valor</th><th scope="col">Fornecedor</th></tr></thead><tbody><% expenses.forEach(function(e) { %><tr><td><%= new Date(e.expense_date).toLocaleDateString('pt-BR') %></td><td><%= e.category %></td><td><%= e.description %></td><td><%= Number(e.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></td><td><%= e.vendor || '—' %></td></tr><% }); %></tbody></table></div></article>
 
-    <article class="panel-card panel-card--spaced"><h2>Auditoria administrativa</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Usuário</th><th scope="col">Ação</th><th scope="col">Entidade</th><th scope="col">Dados</th></tr></thead><tbody><% auditLogs.forEach(function(log) { %><tr><td><%= new Date(log.created_at).toLocaleString('pt-BR') %></td><td><%= log.user_name || 'Sistema' %></td><td><%= log.action %></td><td><%= log.entity_type %>#<%= log.entity_id || '—' %></td><td><code><%= JSON.stringify(log.metadata) %></code></td></tr><% }); %></tbody></table></div></article>
+    <article class="panel-card panel-card--spaced">
+      <div class="operations-panel-heading">
+        <div><p class="analytics-label">Rastreabilidade</p><h2>Auditoria administrativa</h2></div>
+        <span class="operations-panel-heading__count"><%= auditLogs.length %> registros</span>
+      </div>
+      <% const auditActionLabels = {
+        health_record_created: 'Registro veterinário criado',
+        vaccination_created: 'Vacinação registrada',
+        inventory_item_created: 'Item de estoque criado',
+        foster_home_created: 'Lar temporário criado',
+        foster_assignment_created: 'Acolhimento atribuído',
+        volunteer_shift_created: 'Turno agendado',
+        expense_created: 'Despesa registrada',
+        adoption_status_changed: 'Status de adoção alterado',
+        adoption_checklist_updated: 'Checklist de adoção atualizado',
+        adoption_delivery_confirmed: 'Entrega de adoção confirmada',
+        donation_status_changed: 'Status de doação alterado',
+        volunteer_status_changed: 'Status de voluntário alterado'
+      }; %>
+      <% const auditEntityLabels = {
+        pet_health_record: 'Registro veterinário',
+        pet_vaccination: 'Vacinação',
+        inventory_item: 'Item de estoque',
+        foster_home: 'Lar temporário',
+        foster_assignment: 'Acolhimento',
+        volunteer_shift: 'Turno de voluntário',
+        expense: 'Despesa',
+        adoption: 'Adoção',
+        donation: 'Doação',
+        volunteer: 'Voluntário'
+      }; %>
+      <div class="table-container"><table class="table audit-table"><thead><tr><th scope="col">Data</th><th scope="col">Usuário</th><th scope="col">Ação</th><th scope="col">Entidade</th><th scope="col">Detalhes</th></tr></thead><tbody>
+        <% auditLogs.forEach(function(log) { const metadata = log.metadata || {}; %>
+          <tr>
+            <td><time datetime="<%= new Date(log.created_at).toISOString() %>"><%= new Date(log.created_at).toLocaleString('pt-BR') %></time></td>
+            <td><span class="audit-user"><i data-lucide="user-round" aria-hidden="true"></i><%= log.user_name || 'Sistema' %></span></td>
+            <td><span class="audit-action"><%= auditActionLabels[log.action] || log.action.replace(/_/g, ' ') %></span></td>
+            <td><span class="audit-entity"><%= auditEntityLabels[log.entity_type] || log.entity_type %></span><strong>#<%= log.entity_id || '—' %></strong><% if (log.pet_name) { %><span class="audit-entity__pet"><i data-lucide="paw-print" aria-hidden="true"></i><%= log.pet_name %></span><% } %></td>
+            <td><div class="audit-details" title="<%= JSON.stringify(metadata) %>"><% Object.keys(metadata).forEach(function(key) { const valueLabels = { pending: 'Pendente', under_review: 'Em análise', interview: 'Entrevista', visit: 'Visita', approved: 'Aprovada', completed: 'Concluída', rejected: 'Rejeitada', cancelled: 'Cancelada' }; %><span class="audit-detail"><b><%= key === 'petId' ? 'Pet' : key === 'volunteerId' ? 'Voluntário' : key === 'fosterHomeId' ? 'Lar' : key === 'newStatus' ? 'Novo status' : key === 'oldStatus' ? 'Status anterior' : key %>:</b> <%= valueLabels[metadata[key]] || (typeof metadata[key] === 'object' ? JSON.stringify(metadata[key]) : metadata[key]) %></span><% }); %><% if (Object.keys(metadata).length === 0) { %><span class="audit-detail audit-detail--empty">Sem detalhes adicionais</span><% } %></div></td>
+          </tr>
+        <% }); %>
+      </tbody></table></div>
+    </article>
+      </div>
+    </details>
   </div>
 </section>
 

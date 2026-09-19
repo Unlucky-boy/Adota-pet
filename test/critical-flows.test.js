@@ -382,3 +382,23 @@ test('loads all operation sections for the admin screen', async () => {
   assert.equal(res.rendered.view, 'admin/operations');
   assert.deepEqual(res.rendered.data.pets, [{ id: 7, name: 'Thor' }]);
 });
+
+test('rejects invalid dates and values from operation forms', async () => {
+  const cases = [
+    [operationsController.createHealthRecord, { pet_id: '7', record_type: 'Consulta', description: 'x', record_date: '2026-99-99' }, 'Data ou custo do registro veterinário inválido.'],
+    [operationsController.createVaccination, { pet_id: '7', vaccine_name: 'V10', administered_at: '2026-09-19', next_due_at: '2026-01-01' }, 'A próxima dose deve ter uma data válida posterior à aplicação.'],
+    [operationsController.createInventoryItem, { name: 'Ração', category: 'alimentação', unit: 'kg', quantity: '-1', minimum_quantity: '0' }, 'Quantidade ou estoque mínimo inválido.'],
+    [operationsController.createFosterHome, { name: 'Lar', email: 'invalido', capacity: '1' }, 'E-mail do lar temporário inválido.'],
+    [operationsController.createShift, { shift_date: '2026-09-20', start_time: '12:00', end_time: '10:00' }, 'O horário final deve ser posterior ao horário inicial.'],
+  ];
+
+  for (const [handler, body, message] of cases) {
+    const calls = mockQueries();
+    const req = { body, session: { user: { id: 1 } } };
+    const res = createResponse();
+    await handler(req, res);
+    assert.equal(calls.length, 0);
+    assert.equal(req.session.error, message);
+    assert.equal(res.redirectPath, '/admin/operations');
+  }
+});

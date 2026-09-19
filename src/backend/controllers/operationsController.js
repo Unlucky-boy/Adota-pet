@@ -13,6 +13,30 @@ function redirectWithMessage(req, res, path, message, error = false) {
   return res.redirect(path);
 }
 
+function validId(value) {
+  return /^\d+$/.test(String(value || '')) && Number(value) > 0;
+}
+
+function validDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
+function validTime(value) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || ''));
+}
+
+function validAmount(value, allowZero = true) {
+  if (value === '' || value === null || value === undefined) return false;
+  const amount = Number(value);
+  return Number.isFinite(amount) && (allowZero ? amount >= 0 : amount > 0);
+}
+
+function validEmail(value) {
+  return !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 const operationsController = {
   async index(req, res) {
     try {
@@ -26,7 +50,20 @@ const operationsController = {
         db.query("SELECT id, name FROM volunteers WHERE status = 'approved' ORDER BY name"),
         db.query(`SELECT s.*, v.name AS volunteer_name FROM volunteer_shifts s LEFT JOIN volunteers v ON v.id = s.volunteer_id ORDER BY s.shift_date DESC, s.start_time DESC LIMIT 20`),
         db.query('SELECT * FROM expenses ORDER BY expense_date DESC, id DESC LIMIT 30'),
-        db.query(`SELECT a.*, u.name AS user_name FROM audit_logs a LEFT JOIN users u ON u.id = a.user_id ORDER BY a.created_at DESC LIMIT 30`),
+        db.query(`
+          SELECT a.*, u.name AS user_name, pet.name AS pet_name
+          FROM audit_logs a
+          LEFT JOIN users u ON u.id = a.user_id
+          LEFT JOIN LATERAL (
+            SELECT p.name
+            FROM pets p
+            WHERE (a.entity_type IN ('pet_health_record', 'pet_vaccination', 'foster_assignment')
+                   AND p.id = NULLIF(a.metadata->>'petId', '')::INTEGER)
+               OR (a.entity_type = 'adoption'
+                   AND p.id = (SELECT pet_id FROM adoptions WHERE id = a.entity_id))
+            LIMIT 1
+          ) pet ON TRUE
+          ORDER BY a.created_at DESC LIMIT 30`),
       ]);
 
       return res.render('admin/operations', {
@@ -53,7 +90,8 @@ const operationsController = {
 
   async createHealthRecord(req, res) {
     const { pet_id, record_type, record_date, provider, description, cost } = req.body;
-    if (!pet_id || !record_type || !description) return redirectWithMessage(req, res, '/admin/operations', 'Pet, tipo e descrição são obrigatórios.', true);
+    if (!validId(pet_id) || !record_type?.trim() || !description?.trim()) return redirectWithMessage(req, res, '/admin/operations', 'Pet, tipo e descrição válidos são obrigatórios.', true);
+    if ((record_date && !validDate(record_date)) || (cost !== '' && cost !== undefined && !validAmount(cost))) return redirectWithMessage(req, res, '/admin/operations', 'Data ou custo do registro veterinário inválido.', true);
     try {
       const result = await db.query(
         `INSERT INTO pet_health_records (pet_id, record_type, record_date, provider, description, cost, created_by)
@@ -70,7 +108,8 @@ const operationsController = {
 
   async createVaccination(req, res) {
     const { pet_id, vaccine_name, administered_at, next_due_at, notes } = req.body;
-    if (!pet_id || !vaccine_name || !administered_at) return redirectWithMessage(req, res, '/admin/operations', 'Pet, vacina e data são obrigatórios.', true);
+    if (!validId(pet_id) || !vaccine_name?.trim() || !validDate(administered_at)) return redirectWithMessage(req, res, '/admin/operations', 'Pet, vacina e data válidos são obrigatórios.', true);
+    if (next_due_at && (!validDate(next_due_at) || next_due_at < administered_at)) return redirectWithMessage(req, res, '/admin/operations', 'A próxima dose deve ter uma data válida posterior à aplicação.', true);
     try {
       const result = await db.query(
         `INSERT INTO pet_vaccinations (pet_id, vaccine_name, administered_at, next_due_at, notes, created_by)
@@ -87,12 +126,15 @@ const operationsController = {
 
   async createInventoryItem(req, res) {
     const { name, category, quantity, unit, minimum_quantity } = req.body;
-    if (!name || !category) return redirectWithMessage(req, res, '/admin/operations', 'Nome e categoria são obrigatórios.', true);
+    if (!name?.trim() || !category?.trim() || !unit?.trim()) return redirectWithMessage(req, res, '/admin/operations', 'Nome, categoria e unidade são obrigatórios.', true);
+    const normalizedQuantity = quantity === '' || quantity === undefined ? 0 : quantity;
+    const normalizedMinimum = minimum_quantity === '' || minimum_quantity === undefined ? 0 : minimum_quantity;
+    if (!validAmount(normalizedQuantity) || !validAmount(normalizedMinimum)) return redirectWithMessage(req, res, '/admin/operations', 'Quantidade ou estoque mínimo inválido.', true);
     try {
       const result = await db.query(
         `INSERT INTO inventory_items (name, category, quantity, unit, minimum_quantity, updated_by)
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-        [name.trim(), category.trim(), quantity || 0, unit?.trim() || 'unidade', minimum_quantity || 0, req.session.user.id]
+        [name.trim(), category.trim(), normalizedQuantity, unit.trim(), normalizedMinimum, req.session.user.id]
       );
       await audit(req, 'inventory_item_created', 'inventory_item', result.rows[0].id, { name: name.trim() });
       return redirectWithMessage(req, res, '/admin/operations', 'Item de estoque adicionado.');
@@ -104,7 +146,9 @@ const operationsController = {
 
   async createFosterHome(req, res) {
     const { name, email, phone, address, capacity, notes } = req.body;
-    if (!name) return redirectWithMessage(req, res, '/admin/operations', 'Nome do lar temporário é obrigatório.', true);
+    if (!name?.trim()) return redirectWithMessage(req, res, '/admin/operations', 'Nome do lar temporário é obrigatório.', true);
+    if (!validEmail(email)) return redirectWithMessage(req, res, '/admin/operations', 'E-mail do lar temporário inválido.', true);
+    if (!/^\d+$/.test(String(capacity || '')) || Number(capacity) < 1) return redirectWithMessage(req, res, '/admin/operations', 'A capacidade deve ser um número inteiro maior que zero.', true);
     try {
       const result = await db.query(
         `INSERT INTO foster_homes (name, email, phone, address, capacity, notes)
@@ -121,7 +165,8 @@ const operationsController = {
 
   async createAssignment(req, res) {
     const { pet_id, foster_home_id, start_date, end_date, notes } = req.body;
-    if (!pet_id || !foster_home_id || !start_date) return redirectWithMessage(req, res, '/admin/operations', 'Pet, lar e data inicial são obrigatórios.', true);
+    if (!validId(pet_id) || !validId(foster_home_id) || !validDate(start_date)) return redirectWithMessage(req, res, '/admin/operations', 'Pet, lar e data inicial válidos são obrigatórios.', true);
+    if (end_date && (!validDate(end_date) || end_date < start_date)) return redirectWithMessage(req, res, '/admin/operations', 'A data final deve ser válida e posterior ao início.', true);
     try {
       const capacityResult = await db.query(
         `SELECT h.capacity, COUNT(f.id)::int AS active_assignments
@@ -151,7 +196,8 @@ const operationsController = {
 
   async createShift(req, res) {
     const { volunteer_id, shift_date, start_time, end_time, notes } = req.body;
-    if (!shift_date || !start_time || !end_time) return redirectWithMessage(req, res, '/admin/operations', 'Data e horários do turno são obrigatórios.', true);
+    if ((volunteer_id && !validId(volunteer_id)) || !validDate(shift_date) || !validTime(start_time) || !validTime(end_time)) return redirectWithMessage(req, res, '/admin/operations', 'Data e horários do turno são obrigatórios.', true);
+    if (end_time <= start_time) return redirectWithMessage(req, res, '/admin/operations', 'O horário final deve ser posterior ao horário inicial.', true);
     try {
       const result = await db.query(
         `INSERT INTO volunteer_shifts (volunteer_id, shift_date, start_time, end_time, notes, assigned_by)
@@ -168,7 +214,7 @@ const operationsController = {
 
   async createExpense(req, res) {
     const { category, description, amount, expense_date, vendor } = req.body;
-    if (!category || !description || !amount || Number(amount) <= 0) return redirectWithMessage(req, res, '/admin/operations', 'Categoria, descrição e valor válido são obrigatórios.', true);
+    if (!category?.trim() || !description?.trim() || !validAmount(amount, false) || (expense_date && !validDate(expense_date))) return redirectWithMessage(req, res, '/admin/operations', 'Categoria, descrição e valor válido são obrigatórios.', true);
     try {
       const result = await db.query(
         `INSERT INTO expenses (category, description, amount, expense_date, vendor, created_by)
