@@ -11,7 +11,7 @@
       
       <!-- Card: Adotar Pet -->
       <div class="card" style="background: var(--bg); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; display: flex; flex-direction: column; gap: 1rem;">
-        <div style="font-size: 3rem;">🐾</div>
+        <div class="dashboard-card__icon" aria-hidden="true"><i data-lucide="paw-print"></i></div>
         <h3>Adotar um Pet</h3>
         <p style="color: var(--text-muted); flex-grow: 1;">Conheça nossos animais disponíveis e encontre seu novo melhor amigo.</p>
         <a href="/pets" class="btn btn--primary" style="margin-top: 1rem;">Ver Pets</a>
@@ -19,7 +19,7 @@
 
       <!-- Card: Fazer Doação -->
       <div class="card" style="background: var(--bg); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; display: flex; flex-direction: column; gap: 1rem;">
-        <div style="font-size: 3rem;">💛</div>
+        <div class="dashboard-card__icon" aria-hidden="true"><i data-lucide="heart-handshake"></i></div>
         <h3>Fazer uma Doação</h3>
         <p style="color: var(--text-muted); flex-grow: 1;">Ajude nossa ONG a continuar cuidando dos animais resgatados através do PIX.</p>
         <a href="/donate" class="btn btn--secondary" style="margin-top: 1rem;">Doar Agora</a>
@@ -27,7 +27,7 @@
 
       <!-- Card: Ser Voluntário -->
       <div class="card" style="background: var(--bg); border-radius: var(--radius-lg); padding: 2rem; box-shadow: var(--shadow-md); text-align: center; display: flex; flex-direction: column; gap: 1rem;">
-        <div style="font-size: 3rem;">🤝</div>
+        <div class="dashboard-card__icon" aria-hidden="true"><i data-lucide="hand-heart"></i></div>
         <h3>Ser Voluntário</h3>
         <p style="color: var(--text-muted); flex-grow: 1;">Participe ativamente das atividades e ajude na rotina da ONG.</p>
         <a href="/volunteer" class="btn btn--outline" style="margin-top: 1rem;">Quero Ajudar</a>
@@ -53,10 +53,10 @@
               <tbody>
                 <% 
                   const adpStatus = {
-                    pending: '⏳ Pendente',
-                    approved: '✅ Aprovada',
-                    rejected: '❌ Rejeitada',
-                    completed: '🎉 Concluída',
+                    pending: 'Pendente',
+                    approved: 'Aprovada',
+                    rejected: 'Rejeitada',
+                    completed: 'Concluída',
                   };
                   const adpColor = {
                     pending: 'var(--warning)',
@@ -65,15 +65,15 @@
                     completed: 'var(--primary)',
                   };
                   const visStatus = {
-                    scheduled: '📅 Agendada',
-                    completed: '✅ Realizada',
-                    cancelled: '❌ Cancelada',
+                    scheduled: 'Agendada',
+                    completed: 'Realizada',
+                    cancelled: 'Cancelada',
                   };
                 %>
                 <% userAdoptions.forEach(function(a) { %>
                   <tr style="border-bottom: 1px solid var(--gray-100);">
                     <td style="padding: 1rem; display: flex; align-items: center; gap: 1rem;">
-                        <img src="<%= a.pet_image_url || '/img/default-pet.png' %>" alt="<%= a.pet_name %>" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        <img src="<%= a.pet_image_url || '/img/pets/default.jpg' %>" alt="<%= a.pet_name %>" onerror="this.src='/img/pets/default.jpg'" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                       <strong><%= a.pet_name %></strong>
                     </td>
                     <td style="padding: 1rem;"><%= new Date(a.created_at).toLocaleDateString('pt-BR') %></td>
@@ -121,9 +121,9 @@
               <tbody>
                 <% 
                   const volStatus = {
-                    pending: '⏳ Pendente',
-                    approved: '✅ Aprovado',
-                    rejected: '❌ Rejeitado',
+                    pending: 'Pendente',
+                    approved: 'Aprovado',
+                    rejected: 'Rejeitado',
                   };
                   const volColor = {
                     pending: 'var(--warning)',
@@ -181,10 +181,10 @@
             <tbody>
               <% 
                 const statusLabels = {
-                  completed: '✅ Confirmado',
-                  pending_payment: '⏳ Aguardando PIX',
-                  pending_review: '🔍 Em Análise',
-                  rejected: '❌ Rejeitado',
+                  completed: 'Confirmado',
+                  pending_payment: 'Aguardando PIX',
+                  pending_review: 'Em Análise',
+                  rejected: 'Rejeitado',
                 };
                 const statusColor = {
                   completed: 'var(--success)',
@@ -205,7 +205,7 @@
                   </td>
                   <td style="padding: 1rem;">
                     <% if (d.receipt_image) { %>
-                      <a href="/donations/<%= d.id %>/receipt-image" target="_blank" class="btn btn--outline btn--sm" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">📎 Ver</a>
+                      <a href="/donations/<%= d.id %>/receipt-image" target="_blank" class="btn btn--outline btn--sm" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;"><i data-lucide="paperclip"></i> Ver</a>
                     <% } else { %>
                       <a href="/donate/receipt/<%= d.receipt_code %>" class="btn btn--outline btn--sm" style="padding: 0.25rem 0.75rem; font-size: 0.8rem; border-color: var(--warning); color: var(--warning);">Enviar</a>
                     <% } %>
@@ -217,7 +217,7 @@
         </div>
       <% } else { %>
         <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
-          <span style="font-size: 2rem; display: block; margin-bottom: 1rem;">💛</span>
+          <span class="empty-state__icon" aria-hidden="true"><i data-lucide="heart-handshake"></i></span>
           <p>Você ainda não realizou nenhuma doação.</p>
           <a href="/donate" class="btn btn--primary btn--sm" style="margin-top: 1rem;">Fazer minha primeira doação</a>
         </div>

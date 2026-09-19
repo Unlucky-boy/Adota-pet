@@ -2,15 +2,15 @@
 
 <%
   const methodLabels = {
-    pix: '📱 PIX',
-    card: '💳 Cartão',
-    boleto: '🏦 Boleto',
+    pix: 'PIX',
+    card: 'Cartão',
+    boleto: 'Boleto',
   };
   const statusLabels = {
-    completed: '✅ Confirmado',
-    pending_payment: '⏳ Aguardando PIX',
-    pending_review: '🔍 Aguardando Confirmação',
-    rejected: '❌ Rejeitado',
+    completed: 'Confirmado',
+    pending_payment: 'Aguardando PIX',
+    pending_review: 'Aguardando Confirmação',
+    rejected: 'Rejeitado',
   };
   const statusClass = {
     completed: 'approved',
@@ -32,7 +32,7 @@
   <div class="container">
     <div class="receipt-card" id="receiptCard">
       <div class="receipt-card__header">
-        <span class="receipt-card__icon"><%= donation.status === 'completed' ? '✅' : donation.status === 'rejected' ? '❌' : '⏳' %></span>
+        <span class="receipt-card__icon" aria-hidden="true"><i data-lucide="<%= donation.status === 'completed' ? 'circle-check' : donation.status === 'rejected' ? 'circle-x' : 'clock-3' %>"></i></span>
         <h1><%= donation.status === 'completed' ? 'Doação Confirmada!' : donation.status === 'rejected' ? 'Doação Rejeitada' : donation.payment_method === 'pix' ? 'Doação Registrada!' : 'Doação Recebida!' %></h1>
         <p>Obrigado pela sua contribuição à ONG Love Patinhas</p>
       </div>
@@ -84,7 +84,7 @@
               <p class="receipt-card__pix-label">Chave PIX da ONG</p>
               <div class="receipt-card__pix-key">
                 <span id="pixKeyValue"><%= pixKey %></span>
-                <button type="button" class="btn btn--outline btn--sm" onclick="copyPix()">📋 Copiar</button>
+                <button type="button" class="btn btn--outline btn--sm" onclick="copyPix()"><i data-lucide="copy"></i> Copiar</button>
               </div>
             </div>
           <% } %>
@@ -93,7 +93,7 @@
             <div class="receipt-card__divider"></div>
             <div class="receipt-card__attachment">
               <p class="receipt-card__pix-label">Comprovante Enviado</p>
-              <a href="/donations/<%= donation.id %>/receipt-image" target="_blank" class="btn btn--outline btn--sm">📎 Ver Comprovante</a>
+              <a href="/donations/<%= donation.id %>/receipt-image" target="_blank" class="btn btn--outline btn--sm"><i data-lucide="paperclip"></i> Ver Comprovante</a>
             </div>
           <% } else { %>
             <div class="receipt-card__divider"></div>
@@ -101,7 +101,7 @@
               <p class="receipt-card__pix-label">Enviar Comprovante do PIX</p>
               <form method="POST" action="/donate/receipt/<%= donation.receipt_code %>/upload" enctype="multipart/form-data" class="receipt-upload-form">
                 <input type="file" name="receipt_image" accept="image/jpeg,image/png,image/webp,application/pdf" required>
-                <button type="submit" class="btn btn--primary btn--sm">📤 Enviar Comprovante</button>
+                <button type="submit" class="btn btn--primary btn--sm"><i data-lucide="upload"></i> Enviar Comprovante</button>
               </form>
               <span class="form__hint" style="margin-top: var(--space-2); display: block;">JPG, PNG, WebP ou PDF (máx. 5MB)</span>
             </div>
@@ -111,16 +111,16 @@
 
       <div class="receipt-card__footer">
         <% if (projectEmail) { %>
-          <p>📧 Contato: <strong><%= projectEmail %></strong></p>
+          <p><i data-lucide="mail" aria-hidden="true"></i> Contato: <strong><%= projectEmail %></strong></p>
         <% } %>
-        <p>🐾 ONG Love Patinhas — Adota Pet</p>
+        <p><i data-lucide="paw-print" aria-hidden="true"></i> ONG Love Patinhas — Adota Pet</p>
       </div>
     </div>
 
     <div class="receipt-actions">
-      <button class="btn btn--outline btn--lg" onclick="window.print()">🖨️ Imprimir Comprovante</button>
-      <a href="/donate" class="btn btn--primary btn--lg">💛 Fazer Nova Doação</a>
-      <a href="/" class="btn btn--outline btn--lg">← Voltar ao Site</a>
+      <button class="btn btn--outline btn--lg" onclick="window.print()"><i data-lucide="printer"></i> Imprimir Comprovante</button>
+      <a href="/donate" class="btn btn--primary btn--lg"><i data-lucide="heart-handshake"></i> Fazer Nova Doação</a>
+      <a href="/" class="btn btn--outline btn--lg"><i data-lucide="arrow-left"></i> Voltar ao Site</a>
     </div>
   </div>
 </section>

@@ -3,25 +3,25 @@
 <section class="admin-section">
   <div class="container">
     <div class="admin-header">
-      <h1>🤝 Gerenciar Voluntários</h1>
+      <h1><i data-lucide="hand-heart" aria-hidden="true"></i> Gerenciar Voluntários</h1>
       <div class="admin-header__stats">
         <span class="stat-pill stat-pill--total">Total: <%= counts.total %></span>
-        <span class="stat-pill stat-pill--pending">⏳ Pendentes: <%= counts.pending %></span>
-        <span class="stat-pill stat-pill--approved">✅ Aprovados: <%= counts.approved %></span>
-        <span class="stat-pill stat-pill--rejected">❌ Rejeitados: <%= counts.rejected %></span>
+        <span class="stat-pill stat-pill--pending"><i data-lucide="clock-3"></i> Pendentes: <%= counts.pending %></span>
+        <span class="stat-pill stat-pill--approved"><i data-lucide="circle-check"></i> Aprovados: <%= counts.approved %></span>
+        <span class="stat-pill stat-pill--rejected"><i data-lucide="circle-x"></i> Rejeitados: <%= counts.rejected %></span>
       </div>
     </div>
 
     <!-- Filtro por status -->
-    <div class="filters" style="margin-bottom: var(--space-6);">
+    <div class="filters filters--compact" style="margin-bottom: var(--space-6);">
       <div class="filters__group">
         <label>Filtrar por status</label>
         <form method="GET" action="/admin/volunteers" style="display: flex; gap: 0.5rem;">
           <select name="status" onchange="this.form.submit()">
             <option value="all" <%= statusFilter === 'all' ? 'selected' : '' %>>Todos</option>
-            <option value="pending" <%= statusFilter === 'pending' ? 'selected' : '' %>>⏳ Pendentes</option>
-            <option value="approved" <%= statusFilter === 'approved' ? 'selected' : '' %>>✅ Aprovados</option>
-            <option value="rejected" <%= statusFilter === 'rejected' ? 'selected' : '' %>>❌ Rejeitados</option>
+            <option value="pending" <%= statusFilter === 'pending' ? 'selected' : '' %>>Pendentes</option>
+            <option value="approved" <%= statusFilter === 'approved' ? 'selected' : '' %>>Aprovados</option>
+            <option value="rejected" <%= statusFilter === 'rejected' ? 'selected' : '' %>>Rejeitados</option>
           </select>
         </form>
       </div>
@@ -29,7 +29,7 @@
 
     <% if (volunteers.length === 0) { %>
       <div class="empty-state">
-        <span class="empty-state__icon">📭</span>
+        <span class="empty-state__icon" aria-hidden="true"><i data-lucide="inbox"></i></span>
         <h3>Nenhum voluntário encontrado</h3>
         <p>
           <% if (statusFilter !== 'all') { %>
@@ -64,8 +64,8 @@
                   <% } %>
                 </td>
                 <td>
-                  📧 <%= vol.email %>
-                  <br>📱 <%= vol.phone %>
+                  <i data-lucide="mail" aria-hidden="true"></i> <%= vol.email %>
+                  <br><i data-lucide="phone" aria-hidden="true"></i> <%= vol.phone %>
                 </td>
                 <td>
                   <small><%= vol.availability.substring(0, 60) %><%= vol.availability.length > 60 ? '...' : '' %></small>
@@ -73,7 +73,7 @@
                 <td><%= new Date(vol.created_at).toLocaleDateString('pt-BR') %></td>
                 <td>
                   <span class="status-badge status-badge--<%= vol.status %>">
-                    <%= vol.status === 'pending' ? '⏳ Pendente' : vol.status === 'approved' ? '✅ Aprovado' : '❌ Rejeitado' %>
+                    <%= vol.status === 'pending' ? 'Pendente' : vol.status === 'approved' ? 'Aprovado' : 'Rejeitado' %>
                   </span>
                   <% if (vol.reviewer_name && vol.status !== 'pending') { %>
                     <br><small class="review-info">por <%= vol.reviewer_name %></small>
@@ -85,17 +85,17 @@
                     <form method="POST" action="/admin/volunteers/<%= vol.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="approved">
                       <button type="submit" class="btn btn--success btn--sm"
-                              onclick="return confirm('Aprovar este voluntário?')">✓ Aprovar</button>
+                              onclick="return confirm('Aprovar este voluntário?')"><i data-lucide="check"></i> Aprovar</button>
                     </form>
                     <form method="POST" action="/admin/volunteers/<%= vol.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="rejected">
                       <button type="submit" class="btn btn--danger btn--sm"
-                              onclick="return confirm('Rejeitar este voluntário?')">✕ Rejeitar</button>
+                              onclick="return confirm('Rejeitar este voluntário?')"><i data-lucide="x"></i> Rejeitar</button>
                     </form>
                   <% } else { %>
                     <form method="POST" action="/admin/volunteers/<%= vol.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="pending">
-                      <button type="submit" class="btn btn--outline btn--sm">↩ Pendente</button>
+                      <button type="submit" class="btn btn--outline btn--sm"><i data-lucide="undo-2"></i> Pendente</button>
                     </form>
                   <% } %>
                 </td>

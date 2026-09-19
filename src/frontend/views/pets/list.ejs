@@ -15,9 +15,9 @@
         <label for="species">Espécie</label>
         <select name="species" id="species">
           <option value="">Todas</option>
-          <option value="dog" <%= filters.species === 'dog' ? 'selected' : '' %>>🐶 Cachorro</option>
-          <option value="cat" <%= filters.species === 'cat' ? 'selected' : '' %>>🐱 Gato</option>
-          <option value="other" <%= filters.species === 'other' ? 'selected' : '' %>>🐾 Outro</option>
+          <option value="dog" <%= filters.species === 'dog' ? 'selected' : '' %>>Cachorro</option>
+          <option value="cat" <%= filters.species === 'cat' ? 'selected' : '' %>>Gato</option>
+          <option value="other" <%= filters.species === 'other' ? 'selected' : '' %>>Outro</option>
         </select>
       </div>
       <div class="filters__group">
@@ -44,7 +44,7 @@
     <!-- Resultados -->
     <% if (pets.length === 0) { %>
       <div class="empty-state">
-        <span class="empty-state__icon">🔍</span>
+        <span class="empty-state__icon" aria-hidden="true"><i data-lucide="search-x"></i></span>
         <h3>Nenhum pet encontrado</h3>
         <p>Tente ajustar os filtros ou volte mais tarde.</p>
       </div>

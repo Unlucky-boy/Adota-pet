@@ -3,12 +3,12 @@
 <section class="admin-section">
   <div class="container">
     <div class="admin-header">
-      <h1>📋 Solicitações de Adoção</h1>
+      <h1><i data-lucide="clipboard-list" aria-hidden="true"></i> Solicitações de Adoção</h1>
     </div>
 
     <% if (adoptions.length === 0) { %>
       <div class="empty-state">
-        <span class="empty-state__icon">📭</span>
+        <span class="empty-state__icon" aria-hidden="true"><i data-lucide="inbox"></i></span>
         <h3>Nenhuma solicitação recebida</h3>
         <p>Quando alguém solicitar a adoção de um pet, aparecerá aqui.</p>
       </div>
@@ -32,7 +32,7 @@
                 <td>#<%= adoption.id %></td>
                 <td>
                   <strong><%= adoption.pet_name %></strong>
-                  <br><small><%= adoption.pet_species === 'dog' ? '🐶' : '🐱' %></small>
+                  <br><small><i data-lucide="<%= adoption.pet_species === 'dog' ? 'dog' : 'cat' %>" aria-hidden="true"></i></small>
                 </td>
                 <td>
                   <strong><%= adoption.adopter_name %></strong>
@@ -41,15 +41,15 @@
                   <% } %>
                 </td>
                 <td>
-                  📧 <%= adoption.adopter_email %>
+                  <i data-lucide="mail" aria-hidden="true"></i> <%= adoption.adopter_email %>
                   <% if (adoption.adopter_phone) { %>
-                    <br>📱 <%= adoption.adopter_phone %>
+                    <br><i data-lucide="phone" aria-hidden="true"></i> <%= adoption.adopter_phone %>
                   <% } %>
                 </td>
                 <td><%= new Date(adoption.created_at).toLocaleDateString('pt-BR') %></td>
                 <td>
                   <span class="status-badge status-badge--<%= adoption.status %>">
-                    <%= adoption.status === 'pending' ? '⏳ Pendente' : adoption.status === 'approved' ? '✅ Aprovada' : adoption.status === 'completed' ? '🎉 Adotada' : '❌ Rejeitada' %>
+                    <%= adoption.status === 'pending' ? 'Pendente' : adoption.status === 'approved' ? 'Aprovada' : adoption.status === 'completed' ? 'Adotada' : 'Rejeitada' %>
                   </span>
                 </td>
                 <td class="table__actions">
@@ -57,17 +57,17 @@
                     <form method="POST" action="/admin/adoptions/<%= adoption.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="approved">
                       <button type="submit" class="btn btn--success btn--sm"
-                              onclick="return confirm('Aprovar esta solicitação?')">✓ Aprovar</button>
+                              onclick="return confirm('Aprovar esta solicitação?')"><i data-lucide="check"></i> Aprovar</button>
                     </form>
                     <form method="POST" action="/admin/adoptions/<%= adoption.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="rejected">
                       <button type="submit" class="btn btn--danger btn--sm"
-                              onclick="return confirm('Rejeitar esta solicitação?')">✕ Rejeitar</button>
+                              onclick="return confirm('Rejeitar esta solicitação?')"><i data-lucide="x"></i> Rejeitar</button>
                     </form>
                   <% } else { %>
                     <form method="POST" action="/admin/adoptions/<%= adoption.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="pending">
-                      <button type="submit" class="btn btn--outline btn--sm">↩ Voltar p/ Pendente</button>
+                      <button type="submit" class="btn btn--outline btn--sm"><i data-lucide="undo-2"></i> Voltar p/ Pendente</button>
                     </form>
                   <% } %>
                 </td>

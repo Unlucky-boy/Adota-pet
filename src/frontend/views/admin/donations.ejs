@@ -3,7 +3,7 @@
 <section class="admin-section">
   <div class="container">
     <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-      <h1>💰 Gerenciar Doações</h1>
+      <h1><i data-lucide="heart-handshake" aria-hidden="true"></i> Gerenciar Doações</h1>
       <div style="background: var(--bg); padding: 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);">
         <span style="color: var(--text-muted); font-size: 0.9rem;">Saldo Total (Confirmado)</span>
         <strong style="display: block; font-size: 1.5rem; color: var(--success);">
@@ -14,7 +14,7 @@
 
     <% if (donations.length === 0) { %>
       <div class="empty-state">
-        <span class="empty-state__icon">💰</span>
+        <span class="empty-state__icon" aria-hidden="true"><i data-lucide="wallet-cards"></i></span>
         <h3>Nenhuma doação recebida</h3>
         <p>Quando alguém fizer uma doação, aparecerá aqui.</p>
       </div>
@@ -35,12 +35,12 @@
           </thead>
           <tbody>
             <%
-              const methodLabels = { pix: '📱 PIX', card: '💳 Cartão', boleto: '🏦 Boleto' };
+              const methodLabels = { pix: 'PIX', card: 'Cartão', boleto: 'Boleto' };
               const statusLabels = {
-                completed: '✅ Confirmado',
-                pending_payment: '⏳ Aguardando PIX',
-                pending_review: '🔍 Pendente',
-                rejected: '❌ Rejeitado',
+                completed: 'Confirmado',
+                pending_payment: 'Aguardando PIX',
+                pending_review: 'Pendente',
+                rejected: 'Rejeitado',
               };
               const statusClass = {
                 completed: 'approved',
@@ -59,7 +59,7 @@
                     <em style="color: var(--gray-400);">Anônimo</em>
                   <% } %>
                   <% if (d.donor_email) { %>
-                    <br><small>📧 <%= d.donor_email %></small>
+                    <br><small><i data-lucide="mail" aria-hidden="true"></i> <%= d.donor_email %></small>
                   <% } %>
                 </td>
                 <td>
@@ -73,7 +73,7 @@
                 </td>
                 <td>
                   <% if (d.receipt_image) { %>
-                    <a href="/donations/<%= d.id %>/receipt-image" target="_blank" class="btn btn--outline btn--sm">📎 Ver</a>
+                    <a href="/donations/<%= d.id %>/receipt-image" target="_blank" class="btn btn--outline btn--sm"><i data-lucide="paperclip"></i> Ver</a>
                   <% } else { %>
                     <span style="color: var(--gray-400);">—</span>
                   <% } %>
@@ -84,12 +84,12 @@
                     <form method="POST" action="/admin/donations/<%= d.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="completed">
                       <button type="submit" class="btn btn--success btn--sm"
-                              onclick="return confirm('Confirmar esta doação?')">✓ Confirmar</button>
+                              onclick="return confirm('Confirmar esta doação?')"><i data-lucide="check"></i> Confirmar</button>
                     </form>
                     <form method="POST" action="/admin/donations/<%= d.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="rejected">
                       <button type="submit" class="btn btn--danger btn--sm"
-                              onclick="return confirm('Rejeitar esta doação?')">✕ Rejeitar</button>
+                              onclick="return confirm('Rejeitar esta doação?')"><i data-lucide="x"></i> Rejeitar</button>
                     </form>
                   <% } else if (d.status === 'pending_payment') { %>
                     <span style="color: var(--gray-400); font-size: var(--text-xs);">Aguardando comprovante</span>

@@ -4,7 +4,7 @@
   <div class="container">
     <div class="volunteer-card">
       <div class="volunteer-card__header">
-        <span class="volunteer-card__icon">🤝</span>
+        <span class="volunteer-card__icon" aria-hidden="true"><i data-lucide="hand-heart"></i></span>
         <h1>Seja Voluntário</h1>
         <p>Ajude a ONG Love Patinhas nos cuidados com os animais</p>
       </div>
@@ -68,10 +68,10 @@
             placeholder="Conte-nos por que você quer ser voluntário..."
           ><%= (formData && formData.motivation) ? formData.motivation : '' %></textarea>
         </div>
-        <button type="submit" class="btn btn--primary btn--lg btn--full">🤝 Enviar Inscrição</button>
+        <button type="submit" class="btn btn--primary btn--lg btn--full">Enviar Inscrição <i data-lucide="send"></i></button>
       </form>
       <div class="volunteer-card__footer">
-        <a href="/">← Voltar para o site</a>
+        <a href="/"><i data-lucide="arrow-left"></i> Voltar para o site</a>
       </div>
     </div>
   </div>

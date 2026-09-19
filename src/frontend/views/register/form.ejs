@@ -4,7 +4,7 @@
   <div class="container">
     <div class="register-card">
       <div class="register-card__header">
-        <span class="register-card__icon">📋</span>
+        <span class="register-card__icon" aria-hidden="true"><i data-lucide="user-round-plus"></i></span>
         <h1>Cadastre-se</h1>
         <p>Crie sua conta para adotar pets, fazer doações e ser voluntário</p>
       </div>
@@ -98,10 +98,10 @@
             autocomplete="street-address"
           ><%= (formData && formData.address) ? formData.address : '' %></textarea>
         </div>
-        <button type="submit" class="btn btn--primary btn--lg btn--full">📋 Finalizar Cadastro</button>
+        <button type="submit" class="btn btn--primary btn--lg btn--full">Finalizar Cadastro <i data-lucide="arrow-right"></i></button>
       </form>
       <div class="register-card__footer">
-        <a href="/">← Voltar para o site</a>
+        <a href="/"><i data-lucide="arrow-left"></i> Voltar para o site</a>
       </div>
     </div>
   </div>

@@ -4,7 +4,7 @@
   <div class="container">
     <div class="donation-card">
       <div class="donation-card__header">
-        <span class="donation-card__icon">💛</span>
+        <span class="donation-card__icon" aria-hidden="true"><i data-lucide="heart-handshake"></i></span>
         <h1>Faça uma Doação</h1>
         <p>Sua contribuição ajuda a manter os cuidados com os animais da ONG Love Patinhas</p>
       </div>
@@ -45,15 +45,15 @@
           <% if (pixKey) { %>
             <div class="pix-info-box">
               <div class="pix-info-box__header">
-                <span>📱</span>
+                <i data-lucide="qr-code" aria-hidden="true"></i>
                 <strong>Chave PIX da ONG</strong>
               </div>
               <div class="pix-info-box__key">
                 <code id="pixKeyValue"><%= pixKey %></code>
-                <button type="button" class="btn btn--outline btn--sm" onclick="copyPix()">📋 Copiar</button>
+                <button type="button" class="btn btn--outline btn--sm" onclick="copyPix()"><i data-lucide="copy"></i> Copiar</button>
               </div>
               <div style="text-align: center; margin-top: 1.5rem;">
-                <button type="button" class="btn btn--outline" id="generate-qr-btn">🔄 Gerar QR Code de Pagamento</button>
+                <button type="button" class="btn btn--outline" id="generate-qr-btn"><i data-lucide="qr-code"></i> Gerar QR Code de Pagamento</button>
               </div>
 
               <div id="pix-qr-container" style="display: none; text-align: center; margin-top: 1rem; padding: 1rem; background: #fafafa; border-radius: 8px; border: 1px dashed #ccc;">
@@ -61,7 +61,7 @@
                 <img id="pix-qr-img" src="" alt="QR Code PIX" style="max-width: 200px; height: auto; margin: 0.5rem auto;">
                 <div style="margin-top: 1rem;">
                   <code id="pixPayloadValue" style="display:block; word-break: break-all; font-size: 0.75rem; color: #666; margin-bottom: 0.5rem; background: #fff; padding: 0.5rem; border: 1px solid #eee;"></code>
-                  <button type="button" class="btn btn--sm" style="background: #28a745; color: white; border: none; margin-top: 0.5rem;" onclick="copyPixPayload()">📋 Copiar Código PIX</button>
+                  <button type="button" class="btn btn--sm" style="background: #28a745; color: white; border: none; margin-top: 0.5rem;" onclick="copyPixPayload()"><i data-lucide="copy"></i> Copiar Código PIX</button>
                 </div>
               </div>
               <p class="pix-info-box__hint">Faça a transferência e envie o comprovante abaixo</p>
@@ -107,21 +107,21 @@
               </div>
             </div>
 
-            <button type="submit" class="btn btn--primary btn--lg btn--full">💛 Confirmar Doação</button>
+            <button type="submit" class="btn btn--primary btn--lg btn--full">Confirmar Doação <i data-lucide="heart-handshake"></i></button>
 
           <% } else { %>
             <div class="pix-info-box pix-info-box--warning">
-              <p>⚠️ A chave PIX ainda não foi cadastrada pela ONG. As doações estão temporariamente indisponíveis.</p>
+              <p><i data-lucide="triangle-alert" aria-hidden="true"></i> A chave PIX ainda não foi cadastrada pela ONG. As doações estão temporariamente indisponíveis.</p>
             </div>
           <% } %>
         </div>
       </form>
       <div class="donation-card__footer">
         <% if (projectEmail) { %>
-          <p>📧 E-mail do projeto: <strong><%= projectEmail %></strong></p>
+          <p><i data-lucide="mail" aria-hidden="true"></i> E-mail do projeto: <strong><%= projectEmail %></strong></p>
         <% } %>
-        <p>🔒 Pagamento simulado — ambiente de demonstração</p>
-        <a href="/">← Voltar para o site</a>
+        <p><i data-lucide="shield-check" aria-hidden="true"></i> Pagamento simulado — ambiente de demonstração</p>
+        <a href="/"><i data-lucide="arrow-left"></i> Voltar para o site</a>
       </div>
     </div>
   </div>

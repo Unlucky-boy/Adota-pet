@@ -2,11 +2,11 @@
 
 <section class="pet-detail">
   <div class="container">
-    <a href="/pets" class="back-link">← Voltar para a lista</a>
+    <a href="/pets" class="back-link"><i data-lucide="arrow-left"></i> Voltar para a lista</a>
 
     <div class="pet-detail__grid">
       <div class="pet-detail__image">
-        <img src="<%= pet.image_url || '/img/default-pet.png' %>" alt="<%= pet.name %>"
+        <img src="<%= pet.image_url || '/img/pets/default.jpg' %>" alt="<%= pet.name %>"
              onerror="this.src='/img/pets/default.jpg'">
         <% if (pet.status !== 'available') { %>
           <div class="pet-detail__overlay">
@@ -19,7 +19,7 @@
         <h1><%= pet.name %></h1>
         <div class="pet-detail__meta">
           <span class="pet-detail__species">
-            <%= pet.species === 'dog' ? '🐶 Cachorro' : pet.species === 'cat' ? '🐱 Gato' : '🐾 Outro' %>
+            <%= pet.species === 'dog' ? 'Cachorro' : pet.species === 'cat' ? 'Gato' : 'Outro' %>
           </span>
           <span><%= pet.breed || 'SRD' %></span>
           <span>
@@ -50,11 +50,11 @@
           </div>
           <div class="attribute">
             <span class="attribute__label">Vacinado</span>
-            <span class="attribute__value"><%= pet.vaccinated ? '✅ Sim' : '❌ Não' %></span>
+            <span class="attribute__value"><%= pet.vaccinated ? 'Sim' : 'Não' %></span>
           </div>
           <div class="attribute">
             <span class="attribute__label">Castrado</span>
-            <span class="attribute__value"><%= pet.neutered ? '✅ Sim' : '❌ Não' %></span>
+            <span class="attribute__value"><%= pet.neutered ? 'Sim' : 'Não' %></span>
           </div>
         </div>
 
@@ -86,7 +86,7 @@
           <input type="hidden" name="adopter_email" value="<%= adopter.email %>">
           <!-- O backend deve ser ajustado para aceitar sem telefone/endereço obrigatório, ou pegá-los do adopter no DB -->
           <button type="submit" class="btn btn--primary btn--lg btn--full" style="margin-top: 1rem;">
-            🐾 Registrar Intenção de Adoção
+            Registrar Intenção de Adoção <i data-lucide="heart-handshake"></i>
           </button>
         </form>
       <% } else { %>
@@ -122,7 +122,7 @@
           </div>
 
           <button type="submit" class="btn btn--primary btn--lg btn--full">
-            🐾 Enviar Solicitação de Adoção
+            Enviar Solicitação de Adoção <i data-lucide="send"></i>
           </button>
         </form>
       <% } %>

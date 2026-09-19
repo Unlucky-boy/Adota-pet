@@ -3,13 +3,13 @@
 <section class="admin-section">
   <div class="container">
     <div class="admin-header">
-      <h1>📅 Agendamentos de Visita</h1>
-      <a href="/admin/visits/new" class="btn btn--primary">+ Agendar Visita</a>
+      <h1><i data-lucide="calendar-days" aria-hidden="true"></i> Agendamentos de Visita</h1>
+      <a href="/admin/visits/new" class="btn btn--primary"><i data-lucide="plus"></i> Agendar Visita</a>
     </div>
 
     <% if (visits.length === 0) { %>
       <div class="empty-state">
-        <span class="empty-state__icon">📅</span>
+        <span class="empty-state__icon" aria-hidden="true"><i data-lucide="calendar-x"></i></span>
         <h3>Nenhuma visita agendada</h3>
         <p>Clique em "Agendar Visita" para criar o primeiro agendamento.</p>
       </div>
@@ -33,13 +33,13 @@
                 const visitDate = new Date(visit.visit_date).toLocaleDateString('pt-BR');
                 const visitTime = visit.visit_time.substring(0, 5);
                 const typeLabels = {
-                  home_visit: '🏠 Visita Domiciliar',
-                  interview: '🤝 Entrevista',
+                  home_visit: 'Visita Domiciliar',
+                  interview: 'Entrevista',
                 };
                 const statusLabels = {
-                  scheduled: '📅 Agendada',
-                  completed: '✅ Concluída',
-                  cancelled: '❌ Cancelada',
+                  scheduled: 'Agendada',
+                  completed: 'Concluída',
+                  cancelled: 'Cancelada',
                 };
                 const statusClass = {
                   scheduled: 'pending',
@@ -51,13 +51,13 @@
                 <td>#<%= visit.id %></td>
                 <td>
                   <strong><%= visit.adopter_name %></strong>
-                  <br><small>📧 <%= visit.adopter_email %></small>
+                  <br><small><i data-lucide="mail" aria-hidden="true"></i> <%= visit.adopter_email %></small>
                   <% if (visit.adopter_phone) { %>
-                    <br><small>📱 <%= visit.adopter_phone %></small>
+                    <br><small><i data-lucide="phone" aria-hidden="true"></i> <%= visit.adopter_phone %></small>
                   <% } %>
                 </td>
                 <td>
-                  <%= visit.pet_species === 'dog' ? '🐶' : visit.pet_species === 'cat' ? '🐱' : '🐾' %>
+                  <i data-lucide="<%= visit.pet_species === 'dog' ? 'dog' : visit.pet_species === 'cat' ? 'cat' : 'paw-print' %>" aria-hidden="true"></i>
                   <strong><%= visit.pet_name %></strong>
                 </td>
                 <td>
@@ -78,17 +78,17 @@
                     <form method="POST" action="/admin/visits/<%= visit.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="completed">
                       <button type="submit" class="btn btn--success btn--sm"
-                              onclick="return confirm('Marcar visita como concluída?')">✓ Concluída</button>
+                              onclick="return confirm('Marcar visita como concluída?')"><i data-lucide="check"></i> Concluída</button>
                     </form>
                     <form method="POST" action="/admin/visits/<%= visit.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="cancelled">
                       <button type="submit" class="btn btn--danger btn--sm"
-                              onclick="return confirm('Cancelar esta visita?')">✕ Cancelar</button>
+                              onclick="return confirm('Cancelar esta visita?')"><i data-lucide="x"></i> Cancelar</button>
                     </form>
                   <% } else { %>
                     <form method="POST" action="/admin/visits/<%= visit.id %>/status" style="display:inline">
                       <input type="hidden" name="status" value="scheduled">
-                      <button type="submit" class="btn btn--outline btn--sm">↩ Reagendar</button>
+                      <button type="submit" class="btn btn--outline btn--sm"><i data-lucide="undo-2"></i> Reagendar</button>
                     </form>
                   <% } %>
                 </td>

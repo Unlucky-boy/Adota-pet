@@ -1,9 +1,9 @@
 <a href="/pets/<%= pet.id %>" class="pet-card" data-species="<%= pet.species %>">
   <div class="pet-card__image">
-    <img src="<%= pet.image_url || '/img/default-pet.png' %>" alt="<%= pet.name %>" loading="lazy"
+    <img src="<%= pet.image_url || '/img/pets/default.jpg' %>" alt="<%= pet.name %>" loading="lazy"
          onerror="this.src='/img/pets/default.jpg'">
     <span class="pet-card__badge pet-card__badge--<%= pet.species %>">
-      <%= pet.species === 'dog' ? '🐶 Cachorro' : pet.species === 'cat' ? '🐱 Gato' : '🐾 Outro' %>
+      <%= pet.species === 'dog' ? 'Cachorro' : pet.species === 'cat' ? 'Gato' : 'Outro' %>
     </span>
   </div>
   <div class="pet-card__info">
@@ -25,10 +25,10 @@
     </div>
     <div class="pet-card__tags">
       <% if (pet.vaccinated) { %>
-        <span class="tag tag--green">✓ Vacinado</span>
+        <span class="tag tag--green"><i data-lucide="syringe"></i> Vacinado</span>
       <% } %>
       <% if (pet.neutered) { %>
-        <span class="tag tag--blue">✓ Castrado</span>
+        <span class="tag tag--blue"><i data-lucide="badge-check"></i> Castrado</span>
       <% } %>
       <span class="tag tag--orange">
         <%= pet.size === 'small' ? 'Pequeno' : pet.size === 'medium' ? 'Médio' : 'Grande' %>

@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Adota Pet — Plataforma de adoção de animais da ONG Love Patinhas">
+  <meta name="description" content="Adota Pet — encontre um novo companheiro e transforme duas vidas com a ONG Love Patinhas">
   <title><%= title %></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -15,22 +16,29 @@
   <nav class="navbar">
     <div class="container navbar__inner">
       <a href="/" class="navbar__brand">
-        <span class="navbar__icon">🐾</span>
-        <span class="navbar__title">Adota Pet</span>
+        <span class="navbar__icon" aria-hidden="true"><i data-lucide="sparkles"></i></span>
+        <span class="navbar__title">Adota <em>Pet</em></span>
       </a>
       <ul class="navbar__links">
         <li><a href="/">Início</a></li>
-        <li><a href="/pets">Adotar</a></li>
-        <li><a href="/donate" class="navbar__link--donate">💛 Doe Agora</a></li>
-        <li><a href="/volunteer">Voluntarie-se</a></li>
+        <li><a href="/pets">Encontrar um pet</a></li>
+        <li><a href="/donate" class="navbar__link--donate">Apoiar a causa</a></li>
+        <li><a href="/volunteer">Ser voluntário</a></li>
         <% if (user) { %>
-          <li><a href="/admin/dashboard">Dashboard</a></li>
-          <li><a href="/admin/pets">Gerenciar Pets</a></li>
-          <li><a href="/admin/adoptions">Adoções</a></li>
-          <li><a href="/admin/donations">Doações</a></li>
-          <li><a href="/admin/volunteers">Voluntários</a></li>
-          <li><a href="/admin/visits">Visitas</a></li>
-          <li><a href="/admin/settings">⚙️</a></li>
+          <li class="navbar__menu">
+            <details>
+              <summary><i data-lucide="heart-handshake"></i> Área da ONG <i data-lucide="chevron-down" class="navbar__menu-chevron"></i></summary>
+              <ul class="navbar__submenu">
+                <li><a href="/admin/dashboard"><i data-lucide="chart-no-axes-combined"></i> Visão geral</a></li>
+                <li><a href="/admin/pets"><i data-lucide="paw-print"></i> Pets</a></li>
+                <li><a href="/admin/adoptions"><i data-lucide="clipboard-list"></i> Adoções</a></li>
+                <li><a href="/admin/donations"><i data-lucide="heart-handshake"></i> Doações</a></li>
+                <li><a href="/admin/volunteers"><i data-lucide="hand-heart"></i> Voluntários</a></li>
+                <li><a href="/admin/visits"><i data-lucide="calendar-days"></i> Visitas</a></li>
+              </ul>
+            </details>
+          </li>
+          <li><a href="/admin/settings" class="navbar__utility" aria-label="Configurações"><i data-lucide="settings"></i></a></li>
           <li><a href="/logout" class="btn btn--outline btn--sm">Sair</a></li>
         <% } else if (typeof adopter !== 'undefined' && adopter) { %>
           <li><a href="/dashboard" class="btn btn--primary btn--sm">Meu Painel</a></li>
@@ -49,14 +57,14 @@
   <!-- Flash messages -->
   <% if (success) { %>
     <div class="alert alert--success">
-      <span>✅</span> <%= success %>
-      <button class="alert__close" onclick="this.parentElement.remove()">✕</button>
+      <i data-lucide="circle-check" aria-hidden="true"></i> <%= success %>
+      <button class="alert__close" aria-label="Fechar aviso" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button>
     </div>
   <% } %>
   <% if (error) { %>
     <div class="alert alert--error">
-      <span>⚠️</span> <%= error %>
-      <button class="alert__close" onclick="this.parentElement.remove()">✕</button>
+      <i data-lucide="triangle-alert" aria-hidden="true"></i> <%= error %>
+      <button class="alert__close" aria-label="Fechar aviso" onclick="this.parentElement.remove()"><i data-lucide="x"></i></button>
     </div>
   <% } %>
 

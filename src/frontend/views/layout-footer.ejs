@@ -5,28 +5,28 @@
     <div class="container">
       <div class="footer__grid">
         <div class="footer__col">
-          <h3>🐾 Adota Pet</h3>
-          <p>Plataforma de adoção responsável da ONG Love Patinhas.</p>
+          <h3><span aria-hidden="true"><i data-lucide="sparkles"></i></span> Adota <em>Pet</em></h3>
+          <p>Conectando pessoas e animais para uma história que começa em casa.</p>
         </div>
         <div class="footer__col">
           <h4>Links</h4>
           <ul>
             <li><a href="/">Início</a></li>
-            <li><a href="/pets">Adotar</a></li>
+            <li><a href="/pets">Encontrar um pet</a></li>
             <li><a href="/register">Cadastre-se</a></li>
-            <li><a href="/donate">Doe Agora</a></li>
-            <li><a href="/volunteer">Voluntarie-se</a></li>
+            <li><a href="/donate">Apoiar a causa</a></li>
+            <li><a href="/volunteer">Ser voluntário</a></li>
             <li><a href="/login">Área ONG</a></li>
           </ul>
         </div>
         <div class="footer__col">
           <h4>Contato</h4>
-          <p>📧 contato@lovepatinhas.org</p>
-          <p>📱 (82) 99999-9999</p>
+          <p><i data-lucide="mail" aria-hidden="true"></i> contato@lovepatinhas.org</p>
+          <p><i data-lucide="phone" aria-hidden="true"></i> (82) 99999-9999</p>
         </div>
       </div>
       <div class="footer__bottom">
-        <p>&copy; 2026 Adota Pet — ONG Love Patinhas. Projeto acadêmico ACE6.</p>
+        <p>&copy; 2026 Adota Pet — uma iniciativa da ONG Love Patinhas.</p>
       </div>
     </div>
   </footer>
@@ -39,6 +39,10 @@
         document.querySelector('.navbar__links').classList.toggle('navbar__links--open');
         this.classList.toggle('navbar__toggle--active');
       });
+    }
+
+    if (window.lucide) {
+      lucide.createIcons();
     }
 
     // Auto-dismiss alerts

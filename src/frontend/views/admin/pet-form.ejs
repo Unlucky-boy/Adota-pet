@@ -2,7 +2,7 @@
 
 <section class="admin-section">
   <div class="container">
-    <a href="/admin/pets" class="back-link">← Voltar para lista</a>
+    <a href="/admin/pets" class="back-link"><i data-lucide="arrow-left"></i> Voltar para lista</a>
     <h1><%= pet ? 'Editar ' + pet.name : 'Cadastrar Novo Pet' %></h1>
 
     <form class="form form--card" method="POST"
@@ -18,9 +18,9 @@
           <label for="species">Espécie *</label>
           <select id="species" name="species" required>
             <option value="">Selecione</option>
-            <option value="dog" <%= pet && pet.species === 'dog' ? 'selected' : '' %>>🐶 Cachorro</option>
-            <option value="cat" <%= pet && pet.species === 'cat' ? 'selected' : '' %>>🐱 Gato</option>
-            <option value="other" <%= pet && pet.species === 'other' ? 'selected' : '' %>>🐾 Outro</option>
+            <option value="dog" <%= pet && pet.species === 'dog' ? 'selected' : '' %>>Cachorro</option>
+            <option value="cat" <%= pet && pet.species === 'cat' ? 'selected' : '' %>>Gato</option>
+            <option value="other" <%= pet && pet.species === 'other' ? 'selected' : '' %>>Outro</option>
           </select>
         </div>
       </div>
@@ -96,7 +96,7 @@
       <% } %>
 
       <button type="submit" class="btn btn--primary btn--lg btn--full">
-        <%= pet ? '💾 Salvar Alterações' : '🐾 Cadastrar Pet' %>
+        <i data-lucide="<%= pet ? 'save' : 'plus' %>"></i> <%= pet ? 'Salvar Alterações' : 'Cadastrar Pet' %>
       </button>
     </form>
   </div>

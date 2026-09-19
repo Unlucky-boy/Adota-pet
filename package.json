@@ -5,7 +5,8 @@
   "main": "src/backend/server.js",
   "scripts": {
     "start": "node src/backend/server.js",
-    "dev": "nodemon src/backend/server.js"
+    "dev": "nodemon src/backend/server.js",
+    "test": "node --test test/critical-flows.test.js"
   },
   "keywords": ["adoção", "pets", "ong"],
   "license": "MIT",
