@@ -28,11 +28,10 @@ erDiagram
         varchar(20) size
         varchar(10) gender
         text description
-        bytea image_data
-        varchar(50) image_mime_type
+        text image_url
         boolean vaccinated
         boolean neutered
-        varchar(20) status
+        varchar(20) status "pending, approved, rejected, completed"
         timestamp created_at
     }
 
@@ -44,7 +43,7 @@ erDiagram
         varchar(20) adopter_phone
         text adopter_address
         text message
-        varchar(20) status
+        varchar(20) status "pending_payment, pending_review, completed, rejected"
         timestamp created_at
     }
 
@@ -127,3 +126,12 @@ erDiagram
 - **`adopters`**: Guarda dados de usuários cadastrados para adoção.
 - **`donations`**: Registro de doações, independentes de outras tabelas.
 - **`settings`**: Tabela de chave-valor simples para guardar configurações do sistema (ex: chave PIX, e-mail do projeto).
+
+## Tabelas operacionais
+- **`adoption_status_history`**, **`adoption_checklists`** e **`adoption_deliveries`**: acompanham a evolução, a conferência e a entrega final de cada adoção.
+- **`pet_health_records`** e **`pet_vaccinations`**: armazenam atendimentos veterinários, custos e vencimentos de vacinas.
+- **`inventory_items`**: controla medicamentos, ração e materiais com estoque mínimo.
+- **`foster_homes`** e **`foster_assignments`**: registram lares temporários e os pets acolhidos.
+- **`volunteer_shifts`**: agenda turnos de voluntários aprovados.
+- **`expenses`**: registra despesas da ONG para composição do relatório financeiro mensal.
+- **`audit_logs`**: registra ações administrativas relevantes, usuário responsável e metadados da operação.

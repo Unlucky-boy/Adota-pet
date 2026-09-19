@@ -8,7 +8,12 @@
         <h1>Dashboard analítico</h1>
         <p class="analytics-intro">Acompanhe o fluxo de adoções, o cuidado com os pets e o impacto das doações em um só lugar.</p>
       </div>
-      <a href="/admin/adoptions" class="btn btn--outline">Ver solicitações <i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+      <div class="analytics-hero__actions">
+        <a href="/admin/reports/adoptions.csv" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Exportar adoções</a>
+        <a href="/admin/reports/donations.csv" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Exportar doações</a>
+        <a href="/admin/reports/financial.csv" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Relatório financeiro</a>
+        <a href="/admin/adoptions" class="btn btn--primary">Ver solicitações <i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
+      </div>
     </header>
 
     <div class="analytics-kpis">
@@ -84,6 +89,18 @@
         <div class="operation-stat"><span>Voluntários aprovados</span><strong><%= volunteerStats.approved %></strong></div>
         <div class="operation-stat"><span>Visitas realizadas</span><strong><%= visitStats.completed %></strong></div>
         <div class="operation-stat"><span>Pets reservados</span><strong><%= petStats.reserved %></strong></div>
+      </article>
+
+      <article class="analytics-panel analytics-panel--finance">
+        <div class="analytics-panel__header"><div><p class="analytics-label">Prestação de contas</p><h2>Doações confirmadas por mês</h2></div></div>
+        <% const maxMonthlyDonation = Math.max(...monthlyDonations.map(function(item) { return Number(item.total); }), 1); %>
+        <% if (monthlyDonations.length === 0) { %><p class="analytics-empty">Ainda não há doações confirmadas.</p><% } else { %>
+          <div class="monthly-chart" role="img" aria-label="Gráfico de doações confirmadas por mês">
+            <% monthlyDonations.forEach(function(item) { %>
+              <div class="monthly-chart__item"><span class="monthly-chart__value"><%= Number(item.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></span><div class="monthly-chart__bar"><span style="height: <%= Math.max((Number(item.total) / maxMonthlyDonation) * 100, 4) %>%"></span></div><small><%= item.month %></small></div>
+            <% }); %>
+          </div>
+        <% } %>
       </article>
     </div>
   </div>

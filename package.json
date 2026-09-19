@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/backend/server.js",
     "dev": "nodemon src/backend/server.js",
-    "test": "node --test test/critical-flows.test.js"
+    "test": "node --test test/critical-flows.test.js",
+    "db:migrate": "node scripts/migrate-db.js"
   },
   "keywords": ["adoção", "pets", "ong"],
   "license": "MIT",

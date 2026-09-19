@@ -1,9 +1,24 @@
 const db = require('../config/db');
 
+function csvEscape(value) {
+  const text = value === null || value === undefined ? '' : String(value);
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function sendCsv(res, filename, headers, rows) {
+  const content = [headers, ...rows]
+    .map((row) => row.map(csvEscape).join(';'))
+    .join('\r\n');
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  return res.send(`\uFEFF${content}`);
+}
+
 const dashboardController = {
   async adminAnalytics(req, res) {
     try {
-      const [petsResult, adoptionsResult, donationsResult, volunteersResult, visitsResult, speciesResult, recentAdoptionsResult] = await Promise.all([
+      const [petsResult, adoptionsResult, donationsResult, volunteersResult, visitsResult, speciesResult, recentAdoptionsResult, monthlyDonationsResult] = await Promise.all([
         db.query(`SELECT COUNT(*)::int AS total,
                          COUNT(*) FILTER (WHERE status = 'available')::int AS available,
                          COUNT(*) FILTER (WHERE status = 'reserved')::int AS reserved,
@@ -35,6 +50,13 @@ const dashboardController = {
                   JOIN pets p ON p.id = a.pet_id
                   ORDER BY a.created_at DESC
                   LIMIT 6`),
+                db.query(`SELECT TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') AS month,
+                     COALESCE(SUM(amount) FILTER (WHERE status = 'completed'), 0)::numeric AS total,
+                     COUNT(*) FILTER (WHERE status = 'completed')::int AS count
+                    FROM donations
+                    WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '5 months'
+                    GROUP BY DATE_TRUNC('month', created_at)
+                    ORDER BY month`),
       ]);
 
       res.render('admin/dashboard', {
@@ -46,6 +68,7 @@ const dashboardController = {
         visitStats: visitsResult.rows[0],
         speciesStats: speciesResult.rows,
         recentAdoptions: recentAdoptionsResult.rows,
+        monthlyDonations: monthlyDonationsResult.rows,
       });
     } catch (err) {
       console.error('Erro ao carregar dashboard analítico:', err);
@@ -67,6 +90,10 @@ const dashboardController = {
       
       const adopterResult = await db.query('SELECT * FROM adopters WHERE id = $1', [adopterId]);
       const adopter = adopterResult.rows[0];
+      if (!adopter) {
+        req.session.error = 'Conta de adotante não encontrada.';
+        return req.session.destroy(() => res.redirect('/login'));
+      }
 
       // Carregar histórico de doações do usuário
       const donationsResult = await db.query(
@@ -80,7 +107,7 @@ const dashboardController = {
         "SELECT SUM(amount) as total FROM donations WHERE donor_email = $1 AND status = 'completed'",
         [adopterEmail]
       );
-      const totalDonated = totalDonatedResult.rows[0].total || 0;
+      const totalDonated = totalDonatedResult.rows[0]?.total || 0;
 
       // Carregar solicitações de voluntariado do usuário
       const volunteerResult = await db.query(
@@ -95,7 +122,13 @@ const dashboardController = {
                 v.visit_date, v.visit_time, v.status as visit_status 
          FROM adoptions a
          LEFT JOIN pets p ON a.pet_id = p.id
-         LEFT JOIN visits v ON v.adoption_id = a.id
+         LEFT JOIN LATERAL (
+           SELECT visit_date, visit_time, status
+           FROM visits
+           WHERE adoption_id = a.id
+           ORDER BY visit_date ASC, visit_time ASC
+           LIMIT 1
+         ) v ON TRUE
          WHERE a.adopter_email = $1
          ORDER BY a.created_at DESC`,
         [adopterEmail]
@@ -114,6 +147,103 @@ const dashboardController = {
       console.error('Erro ao carregar dashboard:', err);
       req.session.error = 'Erro interno.';
       res.redirect('/');
+    }
+  },
+
+  async donationsReport(req, res) {
+    try {
+      const result = await db.query(
+        `SELECT receipt_code, created_at, donor_name, donor_email,
+                amount, payment_method, status
+         FROM donations
+         ORDER BY created_at DESC`
+      );
+
+      return sendCsv(
+        res,
+        'relatorio-doacoes.csv',
+        ['Código', 'Data', 'Doador', 'E-mail', 'Valor', 'Método', 'Status'],
+        result.rows.map((donation) => [
+          donation.receipt_code,
+          donation.created_at,
+          donation.donor_name,
+          donation.donor_email,
+          donation.amount,
+          donation.payment_method,
+          donation.status,
+        ])
+      );
+    } catch (err) {
+      console.error('Erro ao exportar relatório de doações:', err);
+      req.session.error = 'Não foi possível gerar o relatório de doações.';
+      return res.redirect('/admin/dashboard');
+    }
+  },
+
+  async adoptionsReport(req, res) {
+    try {
+      const result = await db.query(
+        `SELECT a.id, a.created_at, p.name AS pet_name,
+                a.adopter_name, a.adopter_email, a.status
+         FROM adoptions a
+         JOIN pets p ON p.id = a.pet_id
+         ORDER BY a.created_at DESC`
+      );
+
+      return sendCsv(
+        res,
+        'relatorio-adocoes.csv',
+        ['ID', 'Data', 'Pet', 'Solicitante', 'E-mail', 'Status'],
+        result.rows.map((adoption) => [
+          adoption.id,
+          adoption.created_at,
+          adoption.pet_name,
+          adoption.adopter_name,
+          adoption.adopter_email,
+          adoption.status,
+        ])
+      );
+    } catch (err) {
+      console.error('Erro ao exportar relatório de adoções:', err);
+      req.session.error = 'Não foi possível gerar o relatório de adoções.';
+      return res.redirect('/admin/dashboard');
+    }
+  },
+
+  async financialReport(req, res) {
+    try {
+      const result = await db.query(
+        `WITH months AS (
+          SELECT generate_series(
+            DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '11 months',
+            DATE_TRUNC('month', CURRENT_DATE),
+            INTERVAL '1 month'
+          ) AS month_start
+        )
+        SELECT TO_CHAR(m.month_start, 'YYYY-MM') AS month,
+               COALESCE((SELECT SUM(d.amount) FROM donations d
+                         WHERE d.status = 'completed'
+                           AND DATE_TRUNC('month', d.created_at) = m.month_start), 0) AS donations,
+               COALESCE((SELECT SUM(e.amount) FROM expenses e
+                         WHERE DATE_TRUNC('month', e.expense_date) = m.month_start), 0) AS expenses
+        FROM months m ORDER BY m.month_start`
+      );
+
+      return sendCsv(
+        res,
+        'relatorio-financeiro-mensal.csv',
+        ['Mês', 'Doações confirmadas', 'Despesas', 'Saldo líquido'],
+        result.rows.map((row) => [
+          row.month,
+          row.donations,
+          row.expenses,
+          Number(row.donations) - Number(row.expenses),
+        ])
+      );
+    } catch (err) {
+      console.error('Erro ao exportar relatório financeiro:', err);
+      req.session.error = 'Não foi possível gerar o relatório financeiro.';
+      return res.redirect('/admin/dashboard');
     }
   }
 };

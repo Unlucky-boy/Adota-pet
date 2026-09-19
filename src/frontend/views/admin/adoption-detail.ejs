@@ -1,0 +1,56 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <a href="/admin/adoptions" class="back-link"><i data-lucide="arrow-left" aria-hidden="true"></i> Voltar para adoções</a>
+    <div class="admin-header">
+      <div>
+        <p class="analytics-eyebrow">Acompanhamento</p>
+        <h1><i data-lucide="clipboard-check" aria-hidden="true"></i> Adoção #<%= adoption.id %></h1>
+        <p><strong><%= adoption.pet_name %></strong> para <%= adoption.adopter_name %> · <%= adoption.adopter_email %></p>
+      </div>
+      <span class="status-badge status-badge--<%= adoption.status %>"><%= adoption.status %></span>
+    </div>
+
+    <div class="admin-grid admin-grid--two">
+      <article class="panel-card">
+        <h2>Checklist de adoção</h2>
+        <% const checklistLabels = { documents: 'Documentos conferidos', interview: 'Entrevista realizada', home_visit: 'Visita domiciliar realizada', contract: 'Termo de adoção assinado', handover_ready: 'Entrega preparada' }; %>
+        <% const checklistMap = {}; checklist.forEach(function(item) { checklistMap[item.item_key] = item; }); %>
+        <% Object.keys(checklistLabels).forEach(function(itemKey) { const item = checklistMap[itemKey] || {}; %>
+          <form method="POST" action="/admin/adoptions/<%= adoption.id %>/checklist" class="checklist-item">
+            <input type="hidden" name="item_key" value="<%= itemKey %>">
+            <label>
+              <input type="checkbox" name="completed" <%= item.completed ? 'checked' : '' %>>
+              <span><%= checklistLabels[itemKey] %></span>
+            </label>
+            <input type="text" name="note" value="<%= item.note || '' %>" placeholder="Observação opcional" aria-label="Observação de <%= checklistLabels[itemKey] %>">
+            <button type="submit" class="btn btn--outline btn--sm">Salvar</button>
+          </form>
+        <% }); %>
+      </article>
+
+      <article class="panel-card">
+        <h2>Confirmar entrega</h2>
+        <p class="form__hint">A entrega só pode ser confirmada depois da aprovação e reserva do pet.</p>
+        <form method="POST" action="/admin/adoptions/<%= adoption.id %>/delivery" class="form">
+          <div class="form__group"><label for="signed-by">Entrega confirmada por *</label><input id="signed-by" name="signed_by" required maxlength="100"></div>
+          <div class="form__group"><label for="document-reference">Referência do documento</label><input id="document-reference" name="document_reference" maxlength="150"></div>
+          <div class="form__group"><label for="delivery-notes">Observações</label><textarea id="delivery-notes" name="notes" rows="3"></textarea></div>
+          <button type="submit" class="btn btn--success" <%= adoption.status === 'approved' ? '' : 'disabled' %>><i data-lucide="check-circle" aria-hidden="true"></i> Confirmar entrega</button>
+        </form>
+      </article>
+    </div>
+
+    <article class="panel-card panel-card--spaced">
+      <h2>Histórico de status</h2>
+      <% if (history.length === 0) { %><p class="analytics-empty">Nenhuma alteração registrada.</p><% } else { %>
+        <div class="table-container"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">De</th><th scope="col">Para</th><th scope="col">Responsável</th><th scope="col">Observação</th></tr></thead><tbody>
+          <% history.forEach(function(item) { %><tr><td><%= new Date(item.created_at).toLocaleString('pt-BR') %></td><td><%= item.old_status || '—' %></td><td><strong><%= item.new_status %></strong></td><td><%= item.changed_by_name || 'Sistema' %></td><td><%= item.note || '—' %></td></tr><% }); %>
+        </tbody></table></div>
+      <% } %>
+    </article>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

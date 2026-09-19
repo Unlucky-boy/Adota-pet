@@ -1,0 +1,61 @@
+<%- include('../layout-header') %>
+
+<section class="admin-section">
+  <div class="container">
+    <div class="admin-header"><div><p class="analytics-eyebrow">Operação</p><h1><i data-lucide="clipboard-plus" aria-hidden="true"></i> Gestão da ONG</h1><p>Saúde dos pets, insumos, acolhimentos, voluntariado e despesas.</p></div></div>
+
+    <div class="admin-grid admin-grid--two">
+      <article class="panel-card"><h2>Registro veterinário</h2><form method="POST" action="/admin/operations/health" class="form">
+        <label>Pet<select name="pet_id" required><option value="">Selecione</option><% pets.forEach(function(p) { %><option value="<%= p.id %>"><%= p.name %></option><% }); %></select></label>
+        <label>Tipo<input name="record_type" placeholder="Consulta, exame, tratamento" required></label>
+        <label>Data<input type="date" name="record_date"></label><label>Veterinário/clínica<input name="provider"></label>
+        <label>Descrição<textarea name="description" rows="3" required></textarea></label><label>Custo<input type="number" name="cost" min="0" step="0.01"></label>
+        <button class="btn btn--primary" type="submit">Adicionar registro</button>
+      </form></article>
+
+      <article class="panel-card"><h2>Vacinação</h2><form method="POST" action="/admin/operations/vaccinations" class="form">
+        <label>Pet<select name="pet_id" required><option value="">Selecione</option><% pets.forEach(function(p) { %><option value="<%= p.id %>"><%= p.name %></option><% }); %></select></label>
+        <label>Vacina<input name="vaccine_name" required></label><label>Aplicada em<input type="date" name="administered_at" required></label><label>Próxima dose<input type="date" name="next_due_at"></label><label>Observações<textarea name="notes" rows="2"></textarea></label>
+        <button class="btn btn--primary" type="submit">Registrar vacina</button>
+      </form></article>
+    </div>
+
+    <div class="admin-grid admin-grid--two">
+      <article class="panel-card"><h2>Novo item de estoque</h2><form method="POST" action="/admin/operations/inventory" class="form">
+        <label>Item<input name="name" placeholder="Ração, medicamento..." required></label><label>Categoria<input name="category" placeholder="ração, medicamento, limpeza" required></label><label>Quantidade<input type="number" name="quantity" min="0" step="0.01"></label><label>Unidade<input name="unit" value="unidade"></label><label>Estoque mínimo<input type="number" name="minimum_quantity" min="0" step="0.01"></label><button class="btn btn--primary" type="submit">Adicionar ao estoque</button>
+      </form></article>
+      <article class="panel-card"><h2>Novo lar temporário</h2><form method="POST" action="/admin/operations/foster-homes" class="form">
+        <label>Nome<input name="name" required></label><label>E-mail<input type="email" name="email"></label><label>Telefone<input name="phone"></label><label>Endereço<input name="address"></label><label>Capacidade<input type="number" name="capacity" min="1" value="1"></label><label>Observações<textarea name="notes" rows="2"></textarea></label><button class="btn btn--primary" type="submit">Cadastrar lar</button>
+      </form></article>
+    </div>
+
+    <div class="admin-grid admin-grid--two">
+      <article class="panel-card"><h2>Atribuir acolhimento</h2><form method="POST" action="/admin/operations/foster-assignments" class="form">
+        <label>Pet<select name="pet_id" required><option value="">Selecione</option><% pets.forEach(function(p) { %><option value="<%= p.id %>"><%= p.name %></option><% }); %></select></label><label>Lar<select name="foster_home_id" required><option value="">Selecione</option><% fosterHomes.forEach(function(h) { %><option value="<%= h.id %>"><%= h.name %></option><% }); %></select></label><label>Início<input type="date" name="start_date" required></label><label>Fim<input type="date" name="end_date"></label><label>Observações<textarea name="notes" rows="2"></textarea></label><button class="btn btn--primary" type="submit">Atribuir pet</button>
+      </form></article>
+      <article class="panel-card"><h2>Agendar turno voluntário</h2><form method="POST" action="/admin/operations/shifts" class="form">
+        <label>Voluntário<select name="volunteer_id"><option value="">A definir</option><% volunteers.forEach(function(v) { %><option value="<%= v.id %>"><%= v.name %></option><% }); %></select></label><label>Data<input type="date" name="shift_date" required></label><label>Início<input type="time" name="start_time" required></label><label>Fim<input type="time" name="end_time" required></label><label>Observações<textarea name="notes" rows="2"></textarea></label><button class="btn btn--primary" type="submit">Agendar turno</button>
+      </form></article>
+    </div>
+
+    <article class="panel-card"><h2>Registrar despesa</h2><form method="POST" action="/admin/operations/expenses" class="form form--inline"><label>Categoria<input name="category" required></label><label>Descrição<input name="description" required></label><label>Valor<input type="number" name="amount" min="0.01" step="0.01" required></label><label>Data<input type="date" name="expense_date"></label><label>Fornecedor<input name="vendor"></label><button class="btn btn--primary" type="submit">Registrar</button></form></article>
+
+    <div class="admin-grid admin-grid--two panel-card--spaced">
+      <article class="panel-card"><h2>Histórico veterinário recente</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Pet</th><th scope="col">Tipo</th><th scope="col">Descrição</th><th scope="col">Custo</th></tr></thead><tbody><% healthRecords.forEach(function(h) { %><tr><td><%= new Date(h.record_date).toLocaleDateString('pt-BR') %></td><td><%= h.pet_name %></td><td><%= h.record_type %></td><td><%= h.description %></td><td><%= Number(h.cost).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></td></tr><% }); %></tbody></table></div></article>
+      <article class="panel-card"><h2>Pets em lares temporários</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Pet</th><th scope="col">Lar</th><th scope="col">Início</th><th scope="col">Fim</th></tr></thead><tbody><% assignments.forEach(function(a) { %><tr><td><%= a.pet_name %></td><td><%= a.foster_name %></td><td><%= new Date(a.start_date).toLocaleDateString('pt-BR') %></td><td><%= a.end_date ? new Date(a.end_date).toLocaleDateString('pt-BR') : 'Em andamento' %></td></tr><% }); %></tbody></table></div></article>
+    </div>
+
+    <article class="panel-card panel-card--spaced"><h2>Agenda de voluntários</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Voluntário</th><th scope="col">Horário</th><th scope="col">Status</th></tr></thead><tbody><% shifts.forEach(function(s) { %><tr><td><%= new Date(s.shift_date).toLocaleDateString('pt-BR') %></td><td><%= s.volunteer_name || 'A definir' %></td><td><%= s.start_time %> - <%= s.end_time %></td><td><%= s.status %></td></tr><% }); %></tbody></table></div></article>
+
+    <div class="admin-grid admin-grid--two panel-card--spaced">
+      <article class="panel-card"><h2>Próximos vencimentos de vacinas</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Pet</th><th scope="col">Vacina</th><th scope="col">Próxima dose</th></tr></thead><tbody><% vaccinations.forEach(function(v) { %><tr><td><%= v.pet_name %></td><td><%= v.vaccine_name %></td><td><%= v.next_due_at ? new Date(v.next_due_at).toLocaleDateString('pt-BR') : '—' %></td></tr><% }); %></tbody></table></div></article>
+      <article class="panel-card"><h2>Estoque</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Item</th><th scope="col">Categoria</th><th scope="col">Saldo</th></tr></thead><tbody><% inventory.forEach(function(i) { %><tr><td><%= i.name %></td><td><%= i.category %></td><td class="<%= Number(i.quantity) <= Number(i.minimum_quantity) ? 'status-text--danger' : '' %>"><%= i.quantity %> <%= i.unit %></td></tr><% }); %></tbody></table></div></article>
+    </div>
+
+    <article class="panel-card panel-card--spaced"><h2>Despesas recentes</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Categoria</th><th scope="col">Descrição</th><th scope="col">Valor</th><th scope="col">Fornecedor</th></tr></thead><tbody><% expenses.forEach(function(e) { %><tr><td><%= new Date(e.expense_date).toLocaleDateString('pt-BR') %></td><td><%= e.category %></td><td><%= e.description %></td><td><%= Number(e.amount).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></td><td><%= e.vendor || '—' %></td></tr><% }); %></tbody></table></div></article>
+
+    <article class="panel-card panel-card--spaced"><h2>Auditoria administrativa</h2><div class="table-container"><table class="table"><thead><tr><th scope="col">Data</th><th scope="col">Usuário</th><th scope="col">Ação</th><th scope="col">Entidade</th><th scope="col">Dados</th></tr></thead><tbody><% auditLogs.forEach(function(log) { %><tr><td><%= new Date(log.created_at).toLocaleString('pt-BR') %></td><td><%= log.user_name || 'Sistema' %></td><td><%= log.action %></td><td><%= log.entity_type %>#<%= log.entity_id || '—' %></td><td><code><%= JSON.stringify(log.metadata) %></code></td></tr><% }); %></tbody></table></div></article>
+  </div>
+</section>
+
+<%- include('../layout-footer') %>

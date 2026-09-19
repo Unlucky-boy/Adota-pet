@@ -13,6 +13,7 @@ const volunteersRoutes = require('./routes/volunteers');
 const visitsRoutes = require('./routes/visits');
 const settingsRoutes = require('./routes/settings');
 const dashboardRoutes = require('./routes/dashboard');
+const operationsRoutes = require('./routes/operations');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -60,6 +61,7 @@ app.use('/', visitsRoutes);
 app.use('/', settingsRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/', dashboardRoutes);
+app.use('/', operationsRoutes);
 
 // 404
 app.use((req, res) => {

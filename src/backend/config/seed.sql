@@ -29,6 +29,16 @@ CREATE TABLE IF NOT EXISTS pets (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS uq_pets_seed_identity
+  ON pets (
+    name,
+    species,
+    COALESCE(breed, ''),
+    COALESCE(age_months, -1),
+    COALESCE(size, ''),
+    COALESCE(gender, '')
+  );
+
 -- Tabela de solicitações de adoção
 CREATE TABLE IF NOT EXISTS adoptions (
   id SERIAL PRIMARY KEY,
@@ -149,3 +159,133 @@ INSERT INTO settings (key, value) VALUES
   ('pix_key', ''),
   ('project_email', '')
 ON CONFLICT (key) DO NOTHING;
+
+-- Histórico, checklist e confirmação da entrega de adoções
+CREATE TABLE IF NOT EXISTS adoption_status_history (
+  id SERIAL PRIMARY KEY,
+  adoption_id INTEGER NOT NULL REFERENCES adoptions(id) ON DELETE CASCADE,
+  old_status VARCHAR(30),
+  new_status VARCHAR(30) NOT NULL,
+  note TEXT,
+  changed_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS adoption_checklists (
+  id SERIAL PRIMARY KEY,
+  adoption_id INTEGER NOT NULL REFERENCES adoptions(id) ON DELETE CASCADE,
+  item_key VARCHAR(50) NOT NULL,
+  completed BOOLEAN NOT NULL DEFAULT FALSE,
+  note TEXT,
+  completed_by INTEGER REFERENCES users(id),
+  completed_at TIMESTAMP,
+  UNIQUE (adoption_id, item_key)
+);
+
+CREATE TABLE IF NOT EXISTS adoption_deliveries (
+  id SERIAL PRIMARY KEY,
+  adoption_id INTEGER UNIQUE NOT NULL REFERENCES adoptions(id) ON DELETE CASCADE,
+  delivered_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  signed_by VARCHAR(100) NOT NULL,
+  document_reference VARCHAR(150),
+  notes TEXT,
+  confirmed_by INTEGER REFERENCES users(id)
+);
+
+-- Saúde e operação dos pets
+CREATE TABLE IF NOT EXISTS pet_health_records (
+  id SERIAL PRIMARY KEY,
+  pet_id INTEGER NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+  record_type VARCHAR(50) NOT NULL,
+  record_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  provider VARCHAR(120),
+  description TEXT NOT NULL,
+  cost NUMERIC(10,2) DEFAULT 0,
+  created_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS pet_vaccinations (
+  id SERIAL PRIMARY KEY,
+  pet_id INTEGER NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+  vaccine_name VARCHAR(100) NOT NULL,
+  administered_at DATE NOT NULL,
+  next_due_at DATE,
+  notes TEXT,
+  created_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS inventory_items (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  category VARCHAR(30) NOT NULL,
+  quantity NUMERIC(10,2) NOT NULL DEFAULT 0,
+  unit VARCHAR(30) NOT NULL DEFAULT 'unidade',
+  minimum_quantity NUMERIC(10,2) NOT NULL DEFAULT 0,
+  updated_by INTEGER REFERENCES users(id),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS foster_homes (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(150),
+  phone VARCHAR(20),
+  address TEXT,
+  capacity INTEGER NOT NULL DEFAULT 1,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  notes TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS foster_assignments (
+  id SERIAL PRIMARY KEY,
+  pet_id INTEGER NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+  foster_home_id INTEGER NOT NULL REFERENCES foster_homes(id) ON DELETE CASCADE,
+  start_date DATE NOT NULL,
+  end_date DATE,
+  status VARCHAR(20) NOT NULL DEFAULT 'active',
+  notes TEXT,
+  created_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS volunteer_shifts (
+  id SERIAL PRIMARY KEY,
+  volunteer_id INTEGER REFERENCES volunteers(id) ON DELETE SET NULL,
+  shift_date DATE NOT NULL,
+  start_time TIME NOT NULL,
+  end_time TIME NOT NULL,
+  notes TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'scheduled',
+  assigned_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS expenses (
+  id SERIAL PRIMARY KEY,
+  category VARCHAR(50) NOT NULL,
+  description TEXT NOT NULL,
+  amount NUMERIC(10,2) NOT NULL,
+  expense_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  vendor VARCHAR(120),
+  created_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id BIGSERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  action VARCHAR(80) NOT NULL,
+  entity_type VARCHAR(50) NOT NULL,
+  entity_id INTEGER,
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_adoption_history_adoption ON adoption_status_history(adoption_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pet_health_pet ON pet_health_records(pet_id, record_date DESC);
+CREATE INDEX IF NOT EXISTS idx_vaccinations_due ON pet_vaccinations(next_due_at);
+CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(expense_date DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_entity ON audit_logs(entity_type, entity_id, created_at DESC);

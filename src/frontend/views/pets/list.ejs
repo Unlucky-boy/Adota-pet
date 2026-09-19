@@ -11,6 +11,10 @@
   <div class="container">
     <!-- Filtros -->
     <form class="filters" method="GET" action="/pets">
+      <div class="filters__group filters__group--search">
+        <label for="pet-search">Buscar por nome ou raça</label>
+        <input type="search" name="q" id="pet-search" value="<%= filters.q || '' %>" placeholder="Ex.: Thor ou Labrador">
+      </div>
       <div class="filters__group">
         <label for="species">Espécie</label>
         <select name="species" id="species">

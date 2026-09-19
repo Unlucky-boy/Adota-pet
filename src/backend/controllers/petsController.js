@@ -29,10 +29,16 @@ const petsController = {
   // GET /pets — Listagem pública com filtros
   async list(req, res) {
     try {
-      const { species, size, gender } = req.query;
+      const { q, species, size, gender } = req.query;
       let query = "SELECT id, name, species, breed, age_months, size, gender, description, image_url, vaccinated, neutered, status, created_at FROM pets WHERE status = 'available'";
       const params = [];
       let paramIndex = 1;
+
+      if (q && q.trim()) {
+        query += ` AND (name ILIKE $${paramIndex} OR breed ILIKE $${paramIndex})`;
+        params.push(`%${q.trim()}%`);
+        paramIndex += 1;
+      }
 
       if (species) {
         query += ` AND species = $${paramIndex++}`;
@@ -53,7 +59,7 @@ const petsController = {
       res.render('pets/list', {
         title: 'Pets disponíveis — Adota Pet',
         pets: result.rows,
-        filters: { species, size, gender },
+        filters: { q, species, size, gender },
       });
     } catch (err) {
       console.error('Erro ao listar pets:', err);

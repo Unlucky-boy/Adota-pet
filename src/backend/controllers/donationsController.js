@@ -105,6 +105,8 @@ const donationsController = {
 
       // Limpar dados do form
       delete req.session.formData;
+      req.session.donationReceiptCodes = req.session.donationReceiptCodes || [];
+      req.session.donationReceiptCodes.push(receiptCode);
 
       const successMsg = payment_method === 'pix' && !receiptImageBuffer
         ? 'Doação registrada! Faça a transferência PIX e envie o comprovante.'
@@ -146,6 +148,8 @@ const donationsController = {
       }
 
       req.session.success = 'Comprovante enviado com sucesso! Aguarde a confirmação da ONG.';
+      req.session.donationReceiptCodes = req.session.donationReceiptCodes || [];
+      if (!req.session.donationReceiptCodes.includes(code)) req.session.donationReceiptCodes.push(code);
       return res.redirect(`/donate/receipt/${code}`);
     } catch (err) {
       console.error('Erro ao enviar comprovante:', err);
@@ -169,6 +173,16 @@ const donationsController = {
       }
 
       const donation = result.rows[0];
+      const isAdmin = Boolean(req.session.user);
+      const isOwner = Boolean(req.session.adopter && donation.donor_email &&
+        req.session.adopter.email.toLowerCase() === donation.donor_email.toLowerCase());
+      const ownsReceipt = Boolean(req.session.donationReceiptCodes &&
+        req.session.donationReceiptCodes.includes(code));
+      if (!isAdmin && !isOwner && !ownsReceipt) {
+        req.session.error = 'Você não tem acesso a este comprovante.';
+        return res.redirect('/donate');
+      }
+
       const settings = await settingsController.getAll();
 
       res.render('donations/receipt', {
@@ -215,14 +229,23 @@ const donationsController = {
   async serveReceiptImage(req, res) {
     try {
       const result = await db.query(
-        'SELECT receipt_image, receipt_image_mime_type FROM donations WHERE id = $1',
+        'SELECT id, receipt_code, donor_email, receipt_image, receipt_image_mime_type FROM donations WHERE id = $1',
         [req.params.id]
       );
       if (result.rows.length === 0 || !result.rows[0].receipt_image) {
         return res.status(404).send('Comprovante não encontrado.');
       }
-      res.set('Content-Type', result.rows[0].receipt_image_mime_type || 'image/png');
-      res.send(result.rows[0].receipt_image);
+      const donation = result.rows[0];
+      const isAdmin = Boolean(req.session.user);
+      const isOwner = Boolean(req.session.adopter && donation.donor_email &&
+        req.session.adopter.email.toLowerCase() === donation.donor_email.toLowerCase());
+      const ownsAnonymousReceipt = Boolean(req.session.donationReceiptCodes &&
+        req.session.donationReceiptCodes.includes(donation.receipt_code));
+      if (!isAdmin && !isOwner && !ownsAnonymousReceipt) {
+        return res.status(403).send('Acesso não autorizado.');
+      }
+      res.set('Content-Type', donation.receipt_image_mime_type || 'image/png');
+      res.send(donation.receipt_image);
     } catch (err) {
       console.error('Erro ao servir comprovante:', err);
       res.status(500).send('Erro interno');
@@ -243,6 +266,11 @@ const donationsController = {
       await db.query(
         'UPDATE donations SET status = $1 WHERE id = $2',
         [status, req.params.id]
+      );
+      await db.query(
+        `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, metadata)
+         VALUES ($1, 'donation_status_changed', 'donation', $2, $3::jsonb)`,
+        [req.session.user.id, req.params.id, JSON.stringify({ status })]
       );
 
       const label = status === 'completed' ? 'confirmada' : 'rejeitada';

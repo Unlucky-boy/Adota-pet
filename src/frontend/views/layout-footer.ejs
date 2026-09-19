@@ -38,6 +38,9 @@
       navToggle.addEventListener('click', function() {
         document.querySelector('.navbar__links').classList.toggle('navbar__links--open');
         this.classList.toggle('navbar__toggle--active');
+        var expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        this.setAttribute('aria-label', expanded ? 'Abrir menu' : 'Fechar menu');
       });
     }
 

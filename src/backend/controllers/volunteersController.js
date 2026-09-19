@@ -141,6 +141,11 @@ const volunteersController = {
          WHERE id = $3`,
         [status, req.session.user.id, volunteerId]
       );
+      await db.query(
+        `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, metadata)
+         VALUES ($1, 'volunteer_status_changed', 'volunteer', $2, $3::jsonb)`,
+        [req.session.user.id, volunteerId, JSON.stringify({ status })]
+      );
 
       const statusLabel = {
         approved: 'aprovado',

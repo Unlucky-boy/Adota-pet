@@ -138,8 +138,7 @@ Animais cadastrados pela ONG.
 | size | VARCHAR(20) | `small`, `medium`, `large` |
 | gender | VARCHAR(10) | `male`, `female` |
 | description | TEXT | Descrição do pet |
-| image_data | BYTEA | Dados binários da foto |
-| image_mime_type | VARCHAR(50) | Tipo MIME da foto (ex: image/jpeg) |
+| image_url | TEXT | URL pública da foto |
 | vaccinated | BOOLEAN | Vacinado? |
 | neutered | BOOLEAN | Castrado? |
 | status | VARCHAR(20) | `available`, `adopted`, `reserved` |
@@ -182,6 +181,9 @@ docker-compose down -v && docker-compose up -d
 
 # Gerar hash bcrypt de uma senha
 node scripts/generate-password.js <senha>
+
+# Aplicar o schema e as tabelas operacionais em um banco existente
+npm run db:migrate
 ```
 
 ---
