@@ -101,14 +101,14 @@
         donation: 'Doação',
         volunteer: 'Voluntário'
       }; %>
-      <div class="table-container"><table class="table audit-table"><thead><tr><th scope="col">Data</th><th scope="col">Usuário</th><th scope="col">Ação</th><th scope="col">Entidade</th><th scope="col">Detalhes</th></tr></thead><tbody>
+      <div class="table-container"><table class="table audit-table"><thead><tr><th scope="col">Data</th><th scope="col">Usuário</th><th scope="col">Ação</th><th scope="col">Entidade</th><th scope="col">Pet</th></tr></thead><tbody>
         <% auditLogs.forEach(function(log) { const metadata = log.metadata || {}; %>
           <tr>
             <td><time datetime="<%= new Date(log.created_at).toISOString() %>"><%= new Date(log.created_at).toLocaleString('pt-BR') %></time></td>
             <td><span class="audit-user"><i data-lucide="user-round" aria-hidden="true"></i><%= log.user_name || 'Sistema' %></span></td>
             <td><span class="audit-action"><%= auditActionLabels[log.action] || log.action.replace(/_/g, ' ') %></span></td>
-            <td><span class="audit-entity"><%= auditEntityLabels[log.entity_type] || log.entity_type %></span><strong>#<%= log.entity_id || '—' %></strong><% if (log.pet_name) { %><span class="audit-entity__pet"><i data-lucide="paw-print" aria-hidden="true"></i><%= log.pet_name %></span><% } %></td>
-            <td><div class="audit-details" title="<%= JSON.stringify(metadata) %>"><% Object.keys(metadata).forEach(function(key) { const valueLabels = { pending: 'Pendente', under_review: 'Em análise', interview: 'Entrevista', visit: 'Visita', approved: 'Aprovada', completed: 'Concluída', rejected: 'Rejeitada', cancelled: 'Cancelada' }; %><span class="audit-detail"><b><%= key === 'petId' ? 'Pet' : key === 'volunteerId' ? 'Voluntário' : key === 'fosterHomeId' ? 'Lar' : key === 'newStatus' ? 'Novo status' : key === 'oldStatus' ? 'Status anterior' : key %>:</b> <%= valueLabels[metadata[key]] || (typeof metadata[key] === 'object' ? JSON.stringify(metadata[key]) : metadata[key]) %></span><% }); %><% if (Object.keys(metadata).length === 0) { %><span class="audit-detail audit-detail--empty">Sem detalhes adicionais</span><% } %></div></td>
+            <td><span class="audit-entity"><%= auditEntityLabels[log.entity_type] || log.entity_type %></span></td>
+            <td><% if (log.pet_name) { %><span class="audit-pet"><i data-lucide="paw-print" aria-hidden="true"></i><%= log.pet_name %></span><% } else { %><span class="audit-detail--empty">Não relacionado a pet</span><% } %></td>
           </tr>
         <% }); %>
       </tbody></table></div>

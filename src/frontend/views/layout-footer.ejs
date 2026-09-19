@@ -48,6 +48,28 @@
       lucide.createIcons();
     }
 
+    // Persistent light/dark theme toggle
+    var themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+      var updateThemeToggle = function() {
+        var darkMode = document.documentElement.dataset.theme === 'dark';
+        themeToggle.setAttribute('aria-pressed', String(darkMode));
+        themeToggle.setAttribute('aria-label', darkMode ? 'Ativar modo claro' : 'Ativar modo escuro');
+        themeToggle.querySelector('.theme-toggle__label').textContent = darkMode ? 'Modo claro' : 'Modo escuro';
+        var icon = themeToggle.querySelector('[data-lucide]');
+        if (icon) icon.setAttribute('data-lucide', darkMode ? 'sun' : 'moon');
+        if (window.lucide) lucide.createIcons();
+      };
+
+      themeToggle.addEventListener('click', function() {
+        var nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = nextTheme;
+        try { localStorage.setItem('adota-pet-theme', nextTheme); } catch (error) { /* Theme remains active for this page. */ }
+        updateThemeToggle();
+      });
+      updateThemeToggle();
+    }
+
     // Auto-dismiss alerts
     document.querySelectorAll('.alert').forEach(function(el) {
       setTimeout(function() { el.remove(); }, 5000);

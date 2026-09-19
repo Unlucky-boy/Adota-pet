@@ -9,6 +9,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('adota-pet-theme');
+        var systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = savedTheme || systemTheme;
+      } catch (error) {
+        document.documentElement.dataset.theme = 'light';
+      }
+    }());
+  </script>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -25,15 +36,16 @@
         <li><a href="/pets">Encontrar um pet</a></li>
         <li><a href="/donate" class="navbar__link--donate">Apoiar a causa</a></li>
         <li><a href="/volunteer">Ser voluntário</a></li>
+        <li><button class="theme-toggle" id="themeToggle" type="button" aria-label="Ativar modo escuro" aria-pressed="false"><i data-lucide="moon" aria-hidden="true"></i><span class="theme-toggle__label">Modo escuro</span></button></li>
         <% if (user) { %>
           <li class="navbar__menu">
             <details>
-              <summary><i data-lucide="heart-handshake"></i> Área da ONG <i data-lucide="chevron-down" class="navbar__menu-chevron"></i></summary>
+              <summary><i data-lucide="heart"></i> Área da ONG <i data-lucide="chevron-down" class="navbar__menu-chevron"></i></summary>
               <ul class="navbar__submenu">
                 <li><a href="/admin/dashboard"><i data-lucide="chart-no-axes-combined"></i> Visão geral</a></li>
                 <li><a href="/admin/pets"><i data-lucide="paw-print"></i> Pets</a></li>
                 <li><a href="/admin/adoptions"><i data-lucide="clipboard-list"></i> Adoções</a></li>
-                <li><a href="/admin/donations"><i data-lucide="heart-handshake"></i> Doações</a></li>
+                <li><a href="/admin/donations"><i data-lucide="heart"></i> Doações</a></li>
                 <li><a href="/admin/volunteers"><i data-lucide="hand-heart"></i> Voluntários</a></li>
                 <li><a href="/admin/visits"><i data-lucide="calendar-days"></i> Visitas</a></li>
                 <li><a href="/admin/operations"><i data-lucide="clipboard-plus"></i> Operação</a></li>
