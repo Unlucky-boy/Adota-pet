@@ -6,11 +6,11 @@
   "scripts": {
     "start": "node src/backend/server.js",
     "dev": "nodemon src/backend/server.js",
-    "test": "node --test \"test/unit/*.test.js\" \"test/integration/*.test.js\"",
+    "test": "node --test --test-concurrency=1 \"test/unit/*.test.js\" \"test/integration/*.test.js\"",
     "test:unit": "node --test \"test/unit/*.test.js\"",
     "test:watch": "node --test --watch \"test/unit/*.test.js\"",
-    "test:coverage": "node --test --experimental-test-coverage \"test/unit/*.test.js\" \"test/integration/*.test.js\"",
-    "test:integration": "node --env-file=.env.test --test \"test/integration/*.test.js\"",
+    "test:coverage": "node --test --test-concurrency=1 --experimental-test-coverage \"test/unit/*.test.js\" \"test/integration/*.test.js\"",
+    "test:integration": "node --env-file=.env.test --test --test-concurrency=1 \"test/integration/*.test.js\"",
     "db:migrate": "node scripts/migrate-db.js",
     "db:test:up": "docker compose --profile test up -d --wait db-test",
     "db:test:down": "docker compose --profile test rm -sf db-test"

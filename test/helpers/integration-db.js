@@ -5,6 +5,11 @@
  * Isso resolve dois problemas de uma vez: pular com mensagem clara quando o
  * banco de teste não está configurado, e tornar impossível um TRUNCATE
  * acertar o banco de desenvolvimento.
+ *
+ * IMPORTANTE: os testes de integração rodam em série
+ * (`--test-concurrency=1` nos scripts do package.json). Todos os arquivos
+ * compartilham o mesmo banco, então em paralelo o `resetDatabase()` de um
+ * arquivo apagaria as fixtures que outro acabou de criar.
  */
 
 const bcrypt = require('bcrypt');
