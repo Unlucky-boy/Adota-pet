@@ -10,7 +10,10 @@
     "test:unit": "node --test \"test/unit/*.test.js\"",
     "test:watch": "node --test --watch \"test/unit/*.test.js\"",
     "test:coverage": "node --test --experimental-test-coverage \"test/unit/*.test.js\" \"test/integration/*.test.js\"",
-    "db:migrate": "node scripts/migrate-db.js"
+    "test:integration": "node --env-file=.env.test --test \"test/integration/*.test.js\"",
+    "db:migrate": "node scripts/migrate-db.js",
+    "db:test:up": "docker compose --profile test up -d --wait db-test",
+    "db:test:down": "docker compose --profile test rm -sf db-test"
   },
   "keywords": ["adoção", "pets", "ong"],
   "license": "MIT",
