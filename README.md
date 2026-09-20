@@ -86,7 +86,8 @@ npm run dev
 Adota-pet/
 ├── src/
 │   ├── backend/
-│   │   ├── server.js              # Entry point Express
+│   │   ├── server.js              # Entry point: inicia o servidor HTTP
+│   │   ├── app.js                 # Configura o Express (rotas, sessão, views)
 │   │   ├── config/
 │   │   │   ├── db.js              # Conexão PostgreSQL
 │   │   │   └── seed.sql           # DDL + dados iniciais

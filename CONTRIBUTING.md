@@ -12,7 +12,7 @@ O projeto segue a arquitetura **MVC** (Model-View-Controller) com renderização
 Usuário (Browser)
   │
   ▼
-Express (server.js)
+Express (server.js → app.js)
   │
   ├── Middleware de sessão (express-session)
   ├── Middleware isAuthenticated (rotas admin)
@@ -79,7 +79,8 @@ Express (server.js)
 
 | Arquivo | Responsabilidade |
 |---------|-----------------|
-| `server.js` | Configura Express, sessão, view engine (EJS), rotas e inicia o servidor |
+| `app.js` | Configura Express, sessão, view engine (EJS) e rotas. Exporta o `app` (usado pelos testes de integração) |
+| `server.js` | Lê a porta do ambiente e inicia o servidor HTTP |
 | `config/db.js` | Cria pool de conexão com PostgreSQL via `pg` |
 | `config/seed.sql` | DDL (tabelas) + dados iniciais. Roda automaticamente no Docker |
 | `middlewares/isAuthenticated.js` | Bloqueia acesso às rotas `/admin/*` se não houver sessão |
