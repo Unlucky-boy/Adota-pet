@@ -35,7 +35,7 @@ Sistema que permite à ONG cadastrar animais disponíveis para adoção e a pess
 
 ### Pré-requisitos
 
-- [Node.js](https://nodejs.org/) v18+
+- [Node.js](https://nodejs.org/) v20.6+ (os testes usam `--env-file`)
 - [Docker](https://www.docker.com/) e Docker Compose
 - [Git](https://git-scm.com/)
 
@@ -80,13 +80,28 @@ npm run dev
   - **E-mail:** `admin@lovep.com`
   - **Senha:** `admin123`
 
+### 7. Rode os testes
+
+```bash
+npm test                  # suíte completa
+npm run test:unit         # só unitários (não precisa de Docker)
+
+npm run db:test:up        # sobe o banco de teste isolado (porta 5434)
+npm run test:integration  # testes de integração
+```
+
+Sem o banco de teste no ar, `npm test` roda os unitários e pula a integração
+com uma mensagem explicando como subi-lo. Detalhes em
+[CONTRIBUTING.md](CONTRIBUTING.md#-testes-automatizados).
+
 ## 📁 Estrutura do Projeto
 
 ```
 Adota-pet/
 ├── src/
 │   ├── backend/
-│   │   ├── server.js              # Entry point Express
+│   │   ├── server.js              # Entry point: inicia o servidor HTTP
+│   │   ├── app.js                 # Configura o Express (rotas, sessão, views)
 │   │   ├── config/
 │   │   │   ├── db.js              # Conexão PostgreSQL
 │   │   │   └── seed.sql           # DDL + dados iniciais
@@ -139,6 +154,10 @@ Adota-pet/
 │           ├── css/style.css
 │           ├── img/
 │           └── uploads/
+├── test/
+│   ├── helpers/                   # Harness unitário e infra de integração
+│   ├── unit/                      # Testes de controller com banco mockado
+│   └── integration/               # Testes HTTP contra PostgreSQL real
 ├── docs/
 │   └── SPRINT3.md                 # Documentação da Sprint 3
 ├── scripts/

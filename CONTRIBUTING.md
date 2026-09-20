@@ -12,7 +12,7 @@ O projeto segue a arquitetura **MVC** (Model-View-Controller) com renderização
 Usuário (Browser)
   │
   ▼
-Express (server.js)
+Express (server.js → app.js)
   │
   ├── Middleware de sessão (express-session)
   ├── Middleware isAuthenticated (rotas admin)
@@ -79,7 +79,8 @@ Express (server.js)
 
 | Arquivo | Responsabilidade |
 |---------|-----------------|
-| `server.js` | Configura Express, sessão, view engine (EJS), rotas e inicia o servidor |
+| `app.js` | Configura Express, sessão, view engine (EJS) e rotas. Exporta o `app` (usado pelos testes de integração) |
+| `server.js` | Lê a porta do ambiente e inicia o servidor HTTP |
 | `config/db.js` | Cria pool de conexão com PostgreSQL via `pg` |
 | `config/seed.sql` | DDL (tabelas) + dados iniciais. Roda automaticamente no Docker |
 | `middlewares/isAuthenticated.js` | Bloqueia acesso às rotas `/admin/*` se não houver sessão |
@@ -188,6 +189,98 @@ npm run db:migrate
 
 ---
 
+## 🧪 Testes Automatizados
+
+Entrega da **US23**: testes unitários e de integração priorizando os fluxos de
+**adoção** e **doações**, os módulos mais críticos do sistema.
+
+Usamos o runner nativo do Node (`node --test` + `node:assert/strict`) — sem
+framework externo. A única dependência de teste é o `supertest`, necessário
+para dirigir o Express por HTTP.
+
+### Rodando
+
+| Comando | O que faz |
+|---------|-----------|
+| `npm test` | Suíte completa. Sem o banco de teste no ar, a integração é pulada com uma mensagem explicando como subi-lo |
+| `npm run test:unit` | Só os unitários — não precisa de Docker |
+| `npm run test:integration` | Só a integração — exige `npm run db:test:up` antes |
+| `npm run test:watch` | Unitários em modo watch |
+| `npm run test:coverage` | Relatório de cobertura |
+| `npm run db:test:up` | Sobe o banco de teste (`adotapet-db-test`, porta 5434) |
+| `npm run db:test:down` | Remove o container de teste (o banco de dev não é tocado) |
+
+O banco de teste vive atrás do profile `test` do compose, então
+`docker compose up -d` continua subindo apenas o banco de desenvolvimento.
+Seu data dir é `tmpfs`: a cada start o `seed.sql` roda de novo, garantindo
+schema limpo.
+
+### As duas camadas
+
+| Camada | Pasta | Papel |
+|--------|-------|-------|
+| Unitária | `test/unit/` | O que o controller **decide**: qual ramo seguiu, que flash message definiu, para onde redirecionou, quais params passou |
+| Integração | `test/integration/` | O que o **SQL faz**: row locking, o CTE que auto-rejeita adoções concorrentes, upserts e o estado final das tabelas |
+
+Se um teste unitário precisar afirmar sobre o comportamento do SQL, ele
+pertence à camada de integração.
+
+### Escrevendo um teste unitário
+
+Use o harness de `test/helpers/controller-harness.js`:
+
+```js
+const { createRequest, createResponse, stubDb } = require('../helpers/controller-harness');
+
+let stub;
+beforeEach(() => { stub = stubDb(); });
+afterEach(() => { stub.restore(); });   // obrigatório: senão o singleton db fica corrompido
+
+test('rejects an adoption request when the pet is unavailable', async () => {
+  stub.queueResults({ rows: [] });      // resultados consumidos em ordem
+  const req = createRequest({ body: { pet_id: '8' }, session: {} });
+  const res = createResponse();
+
+  await adoptionsController.create(req, res);
+
+  assert.equal(stub.matching('INSERT INTO adoptions').length, 0);
+  assert.equal(req.session.error, 'Este pet não está mais disponível para adoção.');
+});
+```
+
+**Regras de asserção:**
+
+- Afirme `params`, flash messages, redirects e o que foi renderizado.
+- Use `stub.matching('INSERT INTO ...')` em vez de contar chamadas.
+- `stub.calls.length === 0` só quando "não tocou no banco" for o ponto do teste.
+- Nunca escreva regex sobre o SQL cru — quebra em reindentação e não prova nada.
+- Nomes de teste: frase em inglês, minúscula, descrevendo comportamento.
+
+### Escrevendo um teste de integração
+
+Helpers em `test/helpers/integration-db.js` (reset, fixtures) e
+`test/helpers/integration-agent.js` (`anonymous()` e `asAdmin()`).
+
+Duas restrições que não podem ser quebradas:
+
+1. **Os arquivos rodam em série** (`--test-concurrency=1`). Todos compartilham
+   o mesmo banco — em paralelo, o reset de um apaga as fixtures de outro.
+2. **As suítes só rodam se `DB_NAME` terminar em `_test`.** Isso torna
+   impossível um `TRUNCATE` acertar o banco de desenvolvimento.
+
+Flash messages são consumidas na requisição **seguinte** (middleware de locals
+do `app.js`): faça `POST` → 302 → `GET` do destino e afirme no corpo. Quando
+der para afirmar direto no banco, prefira o banco.
+
+### Problemas conhecidos
+
+- `config/db.js` chama `process.exit(-1)` quando o pool do Postgres emite erro.
+  Se o container do banco de teste cair no meio da execução, o processo morre
+  com um código de saída cru em vez de falha de teste. Se vir isso, confira se
+  o `adotapet-db-test` está de pé.
+
+---
+
 ## 🤝 Como Contribuir
 
 1. Crie uma branch a partir da `main`:
@@ -197,7 +290,7 @@ npm run db:migrate
 
 2. Faça as alterações nos arquivos corretos (veja a estrutura acima).
 
-3. Teste localmente (`npm run dev`).
+3. Teste localmente (`npm run dev`) e rode a suíte (`npm test`).
 
 4. Commit com mensagem em inglês:
    ```bash
@@ -220,6 +313,7 @@ npm run db:migrate
 | `style:` | CSS / formatação |
 | `refactor:` | Refatoração de código |
 | `chore:` | Manutenção / configs |
+| `test:` | Testes automatizados |
 
 ---
 

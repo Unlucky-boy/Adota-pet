@@ -15,5 +15,29 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./src/backend/config/seed.sql:/docker-entrypoint-initdb.d/01-seed.sql
 
+  # Banco isolado dos testes de integração. Fica atrás do profile "test",
+  # portanto `docker compose up -d` continua subindo apenas o banco de dev.
+  # O data dir é tmpfs: a cada start o volume está vazio e o seed.sql roda
+  # de novo, garantindo schema limpo sem precisar de `down -v`.
+  db-test:
+    image: postgres:16-alpine
+    container_name: adotapet-db-test
+    profiles: ['test']
+    environment:
+      POSTGRES_USER: adotapet
+      POSTGRES_PASSWORD: adotapet123
+      POSTGRES_DB: adotapet_test
+    ports:
+      - '5434:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - ./src/backend/config/seed.sql:/docker-entrypoint-initdb.d/01-seed.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U adotapet -d adotapet_test']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
 volumes:
   pgdata:
