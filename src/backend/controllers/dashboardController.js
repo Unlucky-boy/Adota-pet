@@ -15,48 +15,90 @@ function sendCsv(res, filename, headers, rows) {
   return res.send(`\uFEFF${content}`);
 }
 
+function isValidDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+}
+
+function getPeriod(req) {
+  const startDate = req.query?.start_date || '';
+  const endDate = req.query?.end_date || '';
+  const invalid = (startDate && !isValidDate(startDate))
+    || (endDate && !isValidDate(endDate))
+    || (startDate && endDate && startDate > endDate);
+
+  return {
+    startDate: invalid ? '' : startDate,
+    endDate: invalid ? '' : endDate,
+    invalid,
+  };
+}
+
+function periodParams(period) {
+  return [period.startDate || null, period.endDate || null];
+}
+
 const dashboardController = {
   async adminAnalytics(req, res) {
+    const period = getPeriod(req);
     try {
       const [petsResult, adoptionsResult, donationsResult, volunteersResult, visitsResult, speciesResult, recentAdoptionsResult, monthlyDonationsResult] = await Promise.all([
         db.query(`SELECT COUNT(*)::int AS total,
                          COUNT(*) FILTER (WHERE status = 'available')::int AS available,
                          COUNT(*) FILTER (WHERE status = 'reserved')::int AS reserved,
                          COUNT(*) FILTER (WHERE status = 'adopted')::int AS adopted
-                  FROM pets`),
+                  FROM pets
+                  WHERE ($1::date IS NULL OR created_at >= $1::date)
+                    AND ($2::date IS NULL OR created_at < $2::date + INTERVAL '1 day')`, periodParams(period)),
         db.query(`SELECT COUNT(*)::int AS total,
                          COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
                          COUNT(*) FILTER (WHERE status IN ('approved', 'completed'))::int AS approved,
                          COUNT(*) FILTER (WHERE status = 'rejected')::int AS rejected
-                  FROM adoptions`),
+                  FROM adoptions
+                  WHERE ($1::date IS NULL OR created_at >= $1::date)
+                    AND ($2::date IS NULL OR created_at < $2::date + INTERVAL '1 day')`, periodParams(period)),
         db.query(`SELECT COUNT(*)::int AS total,
                          COALESCE(SUM(amount) FILTER (WHERE status = 'completed'), 0)::numeric AS confirmed,
                          COUNT(*) FILTER (WHERE status IN ('pending_payment', 'pending_review'))::int AS pending
-                  FROM donations`),
+                  FROM donations
+                  WHERE ($1::date IS NULL OR created_at >= $1::date)
+                    AND ($2::date IS NULL OR created_at < $2::date + INTERVAL '1 day')`, periodParams(period)),
         db.query(`SELECT COUNT(*)::int AS total,
                          COUNT(*) FILTER (WHERE status = 'pending')::int AS pending,
                          COUNT(*) FILTER (WHERE status = 'approved')::int AS approved
-                  FROM volunteers`),
+                  FROM volunteers
+                  WHERE ($1::date IS NULL OR created_at >= $1::date)
+                    AND ($2::date IS NULL OR created_at < $2::date + INTERVAL '1 day')`, periodParams(period)),
         db.query(`SELECT COUNT(*)::int AS total,
                          COUNT(*) FILTER (WHERE status = 'scheduled')::int AS scheduled,
                          COUNT(*) FILTER (WHERE status = 'completed')::int AS completed
-                  FROM visits`),
+                  FROM visits
+                  WHERE ($1::date IS NULL OR visit_date >= $1::date)
+                    AND ($2::date IS NULL OR visit_date < $2::date + INTERVAL '1 day')`, periodParams(period)),
         db.query(`SELECT species, COUNT(*)::int AS count
                   FROM pets
+                  WHERE ($1::date IS NULL OR created_at >= $1::date)
+                    AND ($2::date IS NULL OR created_at < $2::date + INTERVAL '1 day')
                   GROUP BY species
-                  ORDER BY count DESC`),
+                  ORDER BY count DESC`, periodParams(period)),
         db.query(`SELECT a.id, a.adopter_name, a.status, a.created_at, p.name AS pet_name
                   FROM adoptions a
                   JOIN pets p ON p.id = a.pet_id
+                  WHERE ($1::date IS NULL OR a.created_at >= $1::date)
+                    AND ($2::date IS NULL OR a.created_at < $2::date + INTERVAL '1 day')
                   ORDER BY a.created_at DESC
-                  LIMIT 6`),
+                  LIMIT 6`, periodParams(period)),
                 db.query(`SELECT TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') AS month,
                      COALESCE(SUM(amount) FILTER (WHERE status = 'completed'), 0)::numeric AS total,
                      COUNT(*) FILTER (WHERE status = 'completed')::int AS count
                     FROM donations
-                    WHERE created_at >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '5 months'
+                    WHERE created_at >= CASE WHEN $1::date IS NULL
+                                             THEN DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '5 months'
+                                             ELSE $1::date END
+                      AND ($2::date IS NULL OR created_at < $2::date + INTERVAL '1 day')
                     GROUP BY DATE_TRUNC('month', created_at)
-                    ORDER BY month`),
+                    ORDER BY month`, periodParams(period)),
       ]);
 
       res.render('admin/dashboard', {
@@ -69,6 +111,7 @@ const dashboardController = {
         speciesStats: speciesResult.rows,
         recentAdoptions: recentAdoptionsResult.rows,
         monthlyDonations: monthlyDonationsResult.rows,
+        period,
       });
     } catch (err) {
       console.error('Erro ao carregar dashboard analítico:', err);
@@ -151,12 +194,16 @@ const dashboardController = {
   },
 
   async donationsReport(req, res) {
+    const period = getPeriod(req);
     try {
       const result = await db.query(
         `SELECT receipt_code, created_at, donor_name, donor_email,
                 amount, payment_method, status
          FROM donations
+         WHERE ($1::date IS NULL OR created_at >= $1::date)
+           AND ($2::date IS NULL OR created_at < $2::date + INTERVAL '1 day')
          ORDER BY created_at DESC`
+        , periodParams(period)
       );
 
       return sendCsv(
@@ -181,13 +228,17 @@ const dashboardController = {
   },
 
   async adoptionsReport(req, res) {
+    const period = getPeriod(req);
     try {
       const result = await db.query(
         `SELECT a.id, a.created_at, p.name AS pet_name,
                 a.adopter_name, a.adopter_email, a.status
          FROM adoptions a
          JOIN pets p ON p.id = a.pet_id
+         WHERE ($1::date IS NULL OR a.created_at >= $1::date)
+           AND ($2::date IS NULL OR a.created_at < $2::date + INTERVAL '1 day')
          ORDER BY a.created_at DESC`
+        , periodParams(period)
       );
 
       return sendCsv(
@@ -211,6 +262,7 @@ const dashboardController = {
   },
 
   async financialReport(req, res) {
+    const period = getPeriod(req);
     try {
       const result = await db.query(
         `WITH months AS (
@@ -223,10 +275,14 @@ const dashboardController = {
         SELECT TO_CHAR(m.month_start, 'YYYY-MM') AS month,
                COALESCE((SELECT SUM(d.amount) FROM donations d
                          WHERE d.status = 'completed'
+                           AND ($1::date IS NULL OR d.created_at >= $1::date)
+                           AND ($2::date IS NULL OR d.created_at < $2::date + INTERVAL '1 day')
                            AND DATE_TRUNC('month', d.created_at) = m.month_start), 0) AS donations,
                COALESCE((SELECT SUM(e.amount) FROM expenses e
-                         WHERE DATE_TRUNC('month', e.expense_date) = m.month_start), 0) AS expenses
-        FROM months m ORDER BY m.month_start`
+                         WHERE ($1::date IS NULL OR e.expense_date >= $1::date)
+                           AND ($2::date IS NULL OR e.expense_date < $2::date + INTERVAL '1 day')
+                           AND DATE_TRUNC('month', e.expense_date) = m.month_start), 0) AS expenses
+        FROM months m ORDER BY m.month_start`, periodParams(period)
       );
 
       return sendCsv(

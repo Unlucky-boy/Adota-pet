@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { isValidEmail } = require('../utils/validation');
 
 const settingsController = {
   // GET /admin/settings — Página de configurações
@@ -26,6 +27,11 @@ const settingsController = {
   // POST /admin/settings — Salvar configurações
   async saveSettings(req, res) {
     const { pix_key, project_email } = req.body;
+
+    if (project_email && !isValidEmail(project_email)) {
+      req.session.error = 'E-mail do projeto inválido.';
+      return res.redirect('/admin/settings');
+    }
 
     try {
       // Upsert para cada configuração

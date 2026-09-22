@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { isValidDate, isValidId, isValidTime } = require('../utils/validation');
 
 const visitsController = {
   // GET /admin/visits — Lista de visitas agendadas
@@ -66,13 +67,13 @@ const visitsController = {
     req.session.formData = { adoption_id, visit_date, visit_time, visit_type, notes };
 
     // Validações
-    if (!adoption_id || !visit_date || !visit_time) {
+    if (!isValidId(adoption_id) || !isValidDate(visit_date) || !isValidTime(visit_time)) {
       req.session.error = 'Adoção, data e horário são obrigatórios.';
       return res.redirect('/admin/visits/new');
     }
 
     // Validar data futura
-    const visitDateTime = new Date(`${visit_date}T${visit_time}`);
+    const visitDateTime = new Date(`${visit_date}T${visit_time}:00`);
     if (visitDateTime <= new Date()) {
       req.session.error = 'A data e horário devem ser futuros.';
       return res.redirect('/admin/visits/new');
@@ -86,13 +87,18 @@ const visitsController = {
     }
 
     try {
-      // Verificar se adoção existe
+      // A visita só pode acompanhar uma adoção ainda em análise ou aprovada.
       const adoptionCheck = await db.query(
-        'SELECT id FROM adoptions WHERE id = $1',
+        `SELECT a.id
+         FROM adoptions a
+         JOIN pets p ON p.id = a.pet_id
+         WHERE a.id = $1
+           AND a.status IN ('pending', 'approved')
+           AND p.status IN ('available', 'reserved')`,
         [adoption_id]
       );
       if (adoptionCheck.rows.length === 0) {
-        req.session.error = 'Solicitação de adoção não encontrada.';
+        req.session.error = 'A solicitação não está apta para agendar uma visita.';
         return res.redirect('/admin/visits/new');
       }
 
@@ -124,7 +130,7 @@ const visitsController = {
     const { status } = req.body;
     const validStatuses = ['scheduled', 'completed', 'cancelled'];
 
-    if (!validStatuses.includes(status)) {
+    if (!isValidId(req.params.id) || !validStatuses.includes(status)) {
       req.session.error = 'Status inválido.';
       return res.redirect('/admin/visits');
     }

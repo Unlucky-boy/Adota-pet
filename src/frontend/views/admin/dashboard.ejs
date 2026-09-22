@@ -8,13 +8,26 @@
         <h1>Dashboard analítico</h1>
         <p class="analytics-intro">Acompanhe o fluxo de adoções, o cuidado com os pets e o impacto das doações em um só lugar.</p>
       </div>
+      <% const currentPeriod = period || { startDate: '', endDate: '', invalid: false }; %>
+      <% const reportQuery = `?start_date=${encodeURIComponent(currentPeriod.startDate)}&end_date=${encodeURIComponent(currentPeriod.endDate)}`; %>
       <div class="analytics-hero__actions">
-        <a href="/admin/reports/adoptions.csv" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Exportar adoções</a>
-        <a href="/admin/reports/donations.csv" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Exportar doações</a>
-        <a href="/admin/reports/financial.csv" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Relatório financeiro</a>
+        <a href="/admin/reports/adoptions.csv<%= reportQuery %>" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Exportar adoções</a>
+        <a href="/admin/reports/donations.csv<%= reportQuery %>" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Exportar doações</a>
+        <a href="/admin/reports/financial.csv<%= reportQuery %>" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Relatório financeiro</a>
         <a href="/admin/adoptions" class="btn btn--primary">Ver solicitações <i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
       </div>
     </header>
+
+    <form class="analytics-period-filter" method="GET" action="/admin/dashboard">
+      <div>
+        <p class="analytics-label">Período dos indicadores e relatórios</p>
+        <% if (currentPeriod.invalid) { %><p class="status-text--danger">Informe datas válidas, com o início anterior ao fim.</p><% } %>
+      </div>
+      <label>De<input type="date" name="start_date" value="<%= currentPeriod.startDate %>"></label>
+      <label>Até<input type="date" name="end_date" value="<%= currentPeriod.endDate %>"></label>
+      <button class="btn btn--primary" type="submit"><i data-lucide="filter" aria-hidden="true"></i> Filtrar</button>
+      <a class="btn btn--outline" href="/admin/dashboard">Limpar</a>
+    </form>
 
     <div class="analytics-kpis">
       <article class="analytics-kpi analytics-kpi--orange">

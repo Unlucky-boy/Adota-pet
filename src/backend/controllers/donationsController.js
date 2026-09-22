@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const db = require('../config/db');
+const { isValidEmail, isValidId, parseStrictAmount } = require('../utils/validation');
 const settingsController = require('./settingsController');
 
 const donationsController = {
@@ -43,8 +44,8 @@ const donationsController = {
     req.session.formData = { amount, payment_method, donor_name, donor_email };
 
     // Validar valor
-    const parsedAmount = parseFloat(amount);
-    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+    const parsedAmount = parseStrictAmount(amount);
+    if (parsedAmount === null) {
       req.session.error = 'Informe um valor válido para a doação.';
       return res.redirect('/donate');
     }
@@ -63,8 +64,7 @@ const donationsController = {
 
     // Validar e-mail se fornecido
     if (donor_email && donor_email.trim()) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(donor_email)) {
+      if (!isValidEmail(donor_email)) {
         req.session.error = 'E-mail do doador inválido.';
         return res.redirect('/donate');
       }
@@ -257,7 +257,7 @@ const donationsController = {
     const { status } = req.body;
     const validStatuses = ['completed', 'rejected'];
 
-    if (!validStatuses.includes(status)) {
+    if (!isValidId(req.params.id) || !validStatuses.includes(status)) {
       req.session.error = 'Status inválido.';
       return res.redirect('/admin/donations');
     }

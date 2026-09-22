@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { isValidEmail, isValidId, isValidPhone } = require('../utils/validation');
 
 const volunteersController = {
   // GET /volunteer — Formulário público de inscrição
@@ -23,9 +24,13 @@ const volunteersController = {
       return res.redirect('/volunteer');
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!isValidEmail(email)) {
       req.session.error = 'E-mail inválido. Verifique e tente novamente.';
+      return res.redirect('/volunteer');
+    }
+
+    if (!isValidPhone(phone)) {
+      req.session.error = 'Telefone inválido. Informe um telefone brasileiro válido.';
       return res.redirect('/volunteer');
     }
 
@@ -129,7 +134,7 @@ const volunteersController = {
     const volunteerId = req.params.id;
     const validStatuses = ['approved', 'rejected', 'pending'];
 
-    if (!validStatuses.includes(status)) {
+    if (!isValidId(req.params.id) || !validStatuses.includes(status)) {
       req.session.error = 'Status inválido.';
       return res.redirect('/admin/volunteers');
     }

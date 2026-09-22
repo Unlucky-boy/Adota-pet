@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { validateCpf, formatCpf } = require('../utils/cpf');
+const { isValidEmail, isValidPhone } = require('../utils/validation');
 
 const adoptersController = {
   // GET /register — Página de cadastro
@@ -36,9 +37,13 @@ const adoptersController = {
     }
 
     // Validar e-mail
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!isValidEmail(email)) {
       req.session.error = 'E-mail inválido. Verifique e tente novamente.';
+      return res.redirect('/register');
+    }
+
+    if (!isValidPhone(phone)) {
+      req.session.error = 'Telefone inválido. Informe um telefone brasileiro válido.';
       return res.redirect('/register');
     }
 

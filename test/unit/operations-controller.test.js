@@ -117,6 +117,20 @@ describe('operations controller', () => {
     assert.equal(req.session.success, 'Lar temporário cadastrado.');
   });
 
+  test('rejects a foster home with an invalid phone before database access', async () => {
+    const req = createRequest({
+      body: { name: 'Lar da Ana', email: 'ana@example.com', phone: 'telefone', capacity: '2' },
+      session: { user: { id: 1 } },
+    });
+    const res = createResponse();
+
+    await operationsController.createFosterHome(req, res);
+
+    assert.equal(stub.matching('INSERT INTO foster_homes').length, 0);
+    assert.equal(req.session.error, 'Telefone do lar temporário inválido.');
+    assert.equal(res.redirectPath, '/admin/operations');
+  });
+
   test('blocks a foster assignment when the home capacity is full', async () => {
     stub.queueResults({ rows: [{ capacity: 1, active_assignments: 1 }] });
     const req = createRequest({

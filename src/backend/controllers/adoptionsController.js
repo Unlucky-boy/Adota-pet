@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { isValidEmail, isValidId, isValidPhone } = require('../utils/validation');
 
 const adoptionsController = {
   // POST /adoptions — Enviar solicitação
@@ -27,17 +28,25 @@ const adoptionsController = {
         return res.redirect('/pets');
       }
 
-      const adoptionResult = await db.query(
-        `INSERT INTO adoptions (pet_id, adopter_name, adopter_email, adopter_phone, adopter_address, message)
-         VALUES ($1, $2, $3, $4, $5, $6)
-         RETURNING id`,
-        [pet_id, adopter_name, adopter_email, adopter_phone, adopter_address, message]
-      );
-      await db.query(
-        `INSERT INTO adoption_status_history (adoption_id, new_status)
-         VALUES ($1, 'pending')`,
-        [adoptionResult.rows[0].id]
-      );
+      if (!isValidId(pet_id) || !adopter_name?.trim() || !isValidEmail(adopter_email)
+        || (adopter_phone && !isValidPhone(adopter_phone)) || (adopter_address && !adopter_address.trim())) {
+        req.session.error = 'Informe dados válidos para solicitar a adoção.';
+        return res.redirect(`/pets/${pet_id}`);
+      }
+
+      await db.transaction(async (client) => {
+        const adoptionResult = await client.query(
+          `INSERT INTO adoptions (pet_id, adopter_name, adopter_email, adopter_phone, adopter_address, message)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING id`,
+          [pet_id, adopter_name, adopter_email, adopter_phone, adopter_address, message]
+        );
+        await client.query(
+          `INSERT INTO adoption_status_history (adoption_id, new_status)
+           VALUES ($1, 'pending')`,
+          [adoptionResult.rows[0].id]
+        );
+      });
 
       req.session.success = 'Solicitação de adoção enviada com sucesso! Entraremos em contato.';
       res.redirect('/adoptions/success');
@@ -77,7 +86,7 @@ const adoptionsController = {
     const { status } = req.body;
     const validStatuses = ['pending', 'under_review', 'interview', 'visit', 'approved', 'rejected', 'cancelled'];
 
-    if (!validStatuses.includes(status)) {
+    if (!isValidId(req.params.id) || !validStatuses.includes(status)) {
       req.session.error = 'Status inválido.';
       return res.redirect('/admin/adoptions');
     }
@@ -246,7 +255,7 @@ const adoptionsController = {
     const { item_key, note } = req.body;
     const completed = req.body.completed === 'on';
 
-    if (!validItems.includes(item_key)) {
+    if (!isValidId(req.params.id) || !validItems.includes(item_key)) {
       req.session.error = 'Item de checklist inválido.';
       return res.redirect(`/admin/adoptions/${req.params.id}`);
     }
@@ -276,7 +285,7 @@ const adoptionsController = {
 
   async confirmDelivery(req, res) {
     const { signed_by, document_reference, notes } = req.body;
-    if (!signed_by || !signed_by.trim()) {
+    if (!isValidId(req.params.id) || !signed_by || !signed_by.trim()) {
       req.session.error = 'Informe quem confirmou a entrega.';
       return res.redirect(`/admin/adoptions/${req.params.id}`);
     }

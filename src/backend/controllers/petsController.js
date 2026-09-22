@@ -1,4 +1,18 @@
 const db = require('../config/db');
+const { isValidHttpUrl, isValidId } = require('../utils/validation');
+
+const validSpecies = ['dog', 'cat', 'other'];
+const validSizes = ['small', 'medium', 'large'];
+const validGenders = ['male', 'female'];
+const validStatuses = ['available', 'reserved', 'adopted'];
+
+function validatePetData(data, updating = false) {
+  if (!data.name?.trim() || !validSpecies.includes(data.species)
+    || !validSizes.includes(data.size) || !validGenders.includes(data.gender)) return false;
+  if (data.age_months !== '' && data.age_months !== undefined && !/^\d+$/.test(String(data.age_months))) return false;
+  if (!isValidHttpUrl(data.image_url)) return false;
+  return !updating || validStatuses.includes(data.status);
+}
 
 const petsController = {
   // GET / — Home com pets em destaque
@@ -103,6 +117,10 @@ const petsController = {
   // POST /admin/pets — Criar pet
   async create(req, res) {
     const { name, species, breed, age_months, size, gender, description, image_url, vaccinated, neutered } = req.body;
+    if (!validatePetData(req.body)) {
+      req.session.error = 'Dados do pet inválidos. Verifique os campos informados.';
+      return res.redirect('/admin/pets/new');
+    }
     try {
       await db.query(
         `INSERT INTO pets (name, species, breed, age_months, size, gender, description, image_url, vaccinated, neutered)
@@ -127,6 +145,7 @@ const petsController = {
 
   // GET /admin/pets/:id/edit — Formulário de edição
   async editForm(req, res) {
+    if (!isValidId(req.params.id)) return res.status(404).render('404', { title: 'Pet não encontrado' });
     try {
       const result = await db.query('SELECT id, name, species, breed, age_months, size, gender, description, image_url, vaccinated, neutered, status, created_at FROM pets WHERE id = $1', [req.params.id]);
       if (result.rows.length === 0) {
@@ -145,6 +164,10 @@ const petsController = {
   // POST /admin/pets/:id — Atualizar pet
   async update(req, res) {
     const { name, species, breed, age_months, size, gender, description, image_url, vaccinated, neutered, status } = req.body;
+    if (!isValidId(req.params.id) || !validatePetData(req.body, true)) {
+      req.session.error = 'Dados do pet inválidos. Verifique os campos informados.';
+      return res.redirect(`/admin/pets/${req.params.id}/edit`);
+    }
     try {
       let imageUpdate = '';
       const params = [
@@ -183,6 +206,10 @@ const petsController = {
 
   // POST /admin/pets/:id/delete — Remover pet
   async delete(req, res) {
+    if (!isValidId(req.params.id)) {
+      req.session.error = 'Pet inválido.';
+      return res.redirect('/admin/pets');
+    }
     try {
       await db.query('DELETE FROM pets WHERE id = $1', [req.params.id]);
       req.session.success = 'Pet removido com sucesso.';

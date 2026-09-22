@@ -45,6 +45,8 @@
               required
               placeholder="(00) 00000-0000"
               maxlength="15"
+              pattern="[0-9()+. -]{10,15}"
+              inputmode="tel"
               value="<%= (formData && formData.phone) ? formData.phone : '' %>"
               autocomplete="tel"
             >

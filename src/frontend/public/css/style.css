@@ -1929,6 +1929,35 @@ h1, h2, h3 {
   gap: var(--space-2);
 }
 
+.analytics-period-filter {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  border: 1px solid rgba(224, 216, 204, 0.8);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: var(--shadow-sm);
+}
+
+.analytics-period-filter > div { flex: 1 1 240px; }
+.analytics-period-filter label { display: grid; gap: var(--space-1); color: var(--gray-600); font-size: var(--text-xs); font-weight: 700; }
+.analytics-period-filter input {
+  min-width: 150px;
+  min-height: 42px;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--white);
+  color: var(--gray-800);
+  font: inherit;
+  color-scheme: light;
+}
+.analytics-period-filter input:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(24, 78, 90, 0.12); }
+.analytics-period-filter .status-text--danger { margin-top: var(--space-1); }
+
 .analytics-eyebrow, .analytics-label {
   color: var(--primary-dark);
   font-size: var(--text-xs);
@@ -2018,6 +2047,8 @@ h1, h2, h3 {
   .analytics-hero { align-items: flex-start; flex-direction: column; }
   .analytics-hero__actions { width: 100%; justify-content: stretch; }
   .analytics-hero__actions .btn { flex: 1 1 100%; width: 100%; }
+  .analytics-period-filter { align-items: stretch; flex-direction: column; }
+  .analytics-period-filter > div, .analytics-period-filter label, .analytics-period-filter .btn { width: 100%; }
   .analytics-grid { grid-template-columns: 1fr; }
   .analytics-panel--recent, .analytics-panel--operations { grid-column: auto; }
 }
@@ -2934,8 +2965,22 @@ html[data-theme='dark'] .navbar__links a:not(.btn),
 html[data-theme='dark'] .navbar__menu summary,
 html[data-theme='dark'] .theme-toggle { color: var(--gray-700); }
 
+html[data-theme='dark'] .auth-card__icon,
+html[data-theme='dark'] .register-card__icon,
+html[data-theme='dark'] .donation-card__icon,
+html[data-theme='dark'] .volunteer-card__icon,
+html[data-theme='dark'] .dashboard-card__icon {
+  background: rgba(114, 170, 163, 0.16);
+  color: #a9ded8;
+}
+
+html[data-theme='dark'] .analytics-period-filter input {
+  color-scheme: dark;
+}
+
 html[data-theme='dark'] .navbar__submenu,
 html[data-theme='dark'] .filters,
+html[data-theme='dark'] .analytics-period-filter,
 html[data-theme='dark'] .card,
 html[data-theme='dark'] .pet-card,
 html[data-theme='dark'] .panel-card,
@@ -2951,6 +2996,85 @@ html[data-theme='dark'] .success-card,
 html[data-theme='dark'] .receipt-card {
   background: var(--white);
   border-color: var(--gray-200);
+}
+
+html[data-theme='dark'] .analytics-period-filter label,
+html[data-theme='dark'] .analytics-period-filter .analytics-label {
+  color: var(--gray-700);
+}
+
+html[data-theme='dark'] .alert--success {
+  background: #21483f;
+  color: #c7e8dc;
+  border-color: #397464;
+}
+
+html[data-theme='dark'] .alert--error {
+  background: #522d33;
+  color: #f4c9cc;
+  border-color: #89515a;
+}
+
+html[data-theme='dark'] .tag--green {
+  background: #21483f;
+  color: #bfe6d7;
+}
+
+html[data-theme='dark'] .tag--blue {
+  background: #233f4a;
+  color: #c2e2eb;
+}
+
+html[data-theme='dark'] .tag--orange {
+  background: #554323;
+  color: #f3d69b;
+}
+
+html[data-theme='dark'] .status-badge--available,
+html[data-theme='dark'] .status-badge--approved {
+  background: #31594f;
+  color: #c7e2d5;
+}
+
+html[data-theme='dark'] .status-badge--adopted,
+html[data-theme='dark'] .status-badge--completed {
+  background: #2c5260;
+  color: #c6e0e7;
+}
+
+html[data-theme='dark'] .status-badge--reserved,
+html[data-theme='dark'] .status-badge--pending {
+  background: #66572f;
+  color: #f0dfac;
+}
+
+html[data-theme='dark'] .status-badge--rejected {
+  background: #653c42;
+  color: #f0c8ca;
+}
+
+html[data-theme='dark'] .pet-detail__cta {
+  background: #3a2e2c;
+  border-color: #9f6d60;
+}
+
+html[data-theme='dark'] .table thead {
+  background: #263b3d;
+}
+
+html[data-theme='dark'] .table tbody tr:hover {
+  background: #263538;
+}
+
+html[data-theme='dark'] .analytics-kpi--gold { color: #f0c66c; }
+html[data-theme='dark'] .analytics-kpi--blue { color: #8fc8df; }
+html[data-theme='dark'] .analytics-kpi__icon { color: #142426; }
+
+html[data-theme='dark'] .payment-method__icon,
+html[data-theme='dark'] .receipt-card__icon,
+html[data-theme='dark'] .empty-state__icon,
+html[data-theme='dark'] .step-card__icon {
+  color: #a9ded8;
 }
 
 html[data-theme='dark'] .hero,
