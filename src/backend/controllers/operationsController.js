@@ -46,6 +46,11 @@ const operationsController = {
                    AND p.id = NULLIF(a.metadata->>'petId', '')::INTEGER)
                OR (a.entity_type = 'adoption'
                    AND p.id = (SELECT pet_id FROM adoptions WHERE id = a.entity_id))
+               OR (a.entity_type = 'visit'
+                   AND p.id = (SELECT ad.pet_id
+                               FROM visits vi
+                               JOIN adoptions ad ON ad.id = vi.adoption_id
+                               WHERE vi.id = a.entity_id))
             LIMIT 1
           ) pet ON TRUE
           ORDER BY a.created_at DESC LIMIT 30`),
@@ -80,10 +85,17 @@ const operationsController = {
     try {
       const result = await db.query(
         `INSERT INTO pet_health_records (pet_id, record_type, record_date, provider, description, cost, created_by)
-         VALUES ($1, $2, COALESCE($3, CURRENT_DATE), $4, $5, COALESCE($6, 0), $7) RETURNING id`,
+         VALUES ($1, $2, COALESCE($3::date, CURRENT_DATE), $4, $5, COALESCE($6::numeric, 0), $7)
+         RETURNING id`,
         [pet_id, record_type.trim(), record_date || null, provider?.trim() || null, description.trim(), cost || null, req.session.user.id]
       );
-      await audit(req, 'health_record_created', 'pet_health_record', result.rows[0].id, { petId: pet_id });
+      await audit(req, 'health_record_created', 'pet_health_record', result.rows[0].id, {
+        petId: pet_id,
+        recordType: record_type.trim(),
+        recordDate: record_date || null,
+        provider: provider?.trim() || null,
+        cost: cost || '0',
+      });
       return redirectWithMessage(req, res, '/admin/operations', 'Registro veterinário adicionado.');
     } catch (err) {
       console.error('Erro ao criar registro veterinário:', err);
@@ -101,7 +113,12 @@ const operationsController = {
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
         [pet_id, vaccine_name.trim(), administered_at, next_due_at || null, notes?.trim() || null, req.session.user.id]
       );
-      await audit(req, 'vaccination_created', 'pet_vaccination', result.rows[0].id, { petId: pet_id });
+      await audit(req, 'vaccination_created', 'pet_vaccination', result.rows[0].id, {
+        petId: pet_id,
+        vaccineName: vaccine_name.trim(),
+        administeredAt: administered_at,
+        nextDueAt: next_due_at || null,
+      });
       return redirectWithMessage(req, res, '/admin/operations', 'Vacinação registrada.');
     } catch (err) {
       console.error('Erro ao criar vacinação:', err);
@@ -125,7 +142,13 @@ const operationsController = {
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
         [name.trim(), category.trim(), quantityForDb, unit.trim(), minimumForDb, req.session.user.id]
       );
-      await audit(req, 'inventory_item_created', 'inventory_item', result.rows[0].id, { name: name.trim() });
+      await audit(req, 'inventory_item_created', 'inventory_item', result.rows[0].id, {
+        name: name.trim(),
+        category: category.trim(),
+        quantity: quantityForDb,
+        unit: unit.trim(),
+        minimumQuantity: minimumForDb,
+      });
       return redirectWithMessage(req, res, '/admin/operations', 'Item de estoque adicionado.');
     } catch (err) {
       console.error('Erro ao criar item de estoque:', err);
@@ -145,7 +168,10 @@ const operationsController = {
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
         [name.trim(), email?.trim() || null, phone?.trim() || null, address?.trim() || null, capacity || 1, notes?.trim() || null]
       );
-      await audit(req, 'foster_home_created', 'foster_home', result.rows[0].id, { name: name.trim() });
+      await audit(req, 'foster_home_created', 'foster_home', result.rows[0].id, {
+        name: name.trim(),
+        capacity: Number(capacity || 1),
+      });
       return redirectWithMessage(req, res, '/admin/operations', 'Lar temporário cadastrado.');
     } catch (err) {
       console.error('Erro ao criar lar temporário:', err);
@@ -180,7 +206,12 @@ const operationsController = {
       });
       if (result.notFound) return redirectWithMessage(req, res, '/admin/operations', 'Lar temporário não encontrado.', true);
       if (result.full) return redirectWithMessage(req, res, '/admin/operations', 'A capacidade deste lar temporário já foi atingida.', true);
-      await audit(req, 'foster_assignment_created', 'foster_assignment', result.id, { petId: pet_id, fosterHomeId: foster_home_id });
+      await audit(req, 'foster_assignment_created', 'foster_assignment', result.id, {
+        petId: pet_id,
+        fosterHomeId: foster_home_id,
+        startDate: start_date,
+        endDate: end_date || null,
+      });
       return redirectWithMessage(req, res, '/admin/operations', 'Lar temporário atribuído ao pet.');
     } catch (err) {
       console.error('Erro ao criar acolhimento:', err);
@@ -198,7 +229,12 @@ const operationsController = {
          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
         [volunteer_id || null, shift_date, start_time, end_time, notes?.trim() || null, req.session.user.id]
       );
-      await audit(req, 'volunteer_shift_created', 'volunteer_shift', result.rows[0].id, { volunteerId: volunteer_id || null });
+      await audit(req, 'volunteer_shift_created', 'volunteer_shift', result.rows[0].id, {
+        volunteerId: volunteer_id || null,
+        shiftDate: shift_date,
+        startTime: start_time,
+        endTime: end_time,
+      });
       return redirectWithMessage(req, res, '/admin/operations', 'Turno agendado.');
     } catch (err) {
       console.error('Erro ao criar turno:', err);
@@ -216,7 +252,12 @@ const operationsController = {
          VALUES ($1, $2, $3, COALESCE($4, CURRENT_DATE), $5, $6) RETURNING id`,
         [category.trim(), description.trim(), parsedAmount, expense_date || null, vendor?.trim() || null, req.session.user.id]
       );
-      await audit(req, 'expense_created', 'expense', result.rows[0].id, { amount });
+      await audit(req, 'expense_created', 'expense', result.rows[0].id, {
+        category: category.trim(),
+        amount: String(parsedAmount),
+        expenseDate: expense_date || null,
+        vendor: vendor?.trim() || null,
+      });
       return redirectWithMessage(req, res, '/admin/operations', 'Despesa registrada.');
     } catch (err) {
       console.error('Erro ao criar despesa:', err);

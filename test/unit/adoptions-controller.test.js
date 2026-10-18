@@ -51,6 +51,7 @@ describe('adoptions controller', () => {
       const [insert] = stub.matching('INSERT INTO adoptions');
       assert.deepEqual(insert.params, [
         '7',
+        null,
         'Ana Silva',
         'ana@example.com',
         '11999999999',
@@ -80,7 +81,7 @@ describe('adoptions controller', () => {
 
     test('fills the missing contact details from the logged in adopter profile', async () => {
       stub.queueResults(
-        { rows: [{ phone: '11988887777', address: 'Rua do Perfil, 55' }] },
+        { rows: [{ id: 3, name: 'Ana Silva', email: 'ana@example.com', phone: '11988887777', address: 'Rua do Perfil, 55' }] },
         { rows: [{ id: 7, status: 'available' }] },
         { rows: [{ id: 22 }] },
         { rows: [] },
@@ -96,7 +97,11 @@ describe('adoptions controller', () => {
       const [profile] = stub.matching('FROM adopters');
       assert.deepEqual(profile.params, [3]);
       const [insert] = stub.matching('INSERT INTO adoptions');
-      assert.deepEqual(insert.params.slice(3), [
+      assert.deepEqual(insert.params, [
+        '7',
+        3,
+        'Ana Silva',
+        'ana@example.com',
         '11988887777',
         'Rua do Perfil, 55',
         'Intenção de adoção registrada via sistema (Usuário Logado).',
@@ -104,8 +109,9 @@ describe('adoptions controller', () => {
       assert.equal(res.redirectPath, '/adoptions/success');
     });
 
-    test('keeps the submitted contact details when the logged in adopter provides them', async () => {
+    test('uses profile data instead of submitted identity for a logged in adopter', async () => {
       stub.queueResults(
+        { rows: [{ id: 3, name: 'Ana Silva', email: 'ana@example.com', phone: '11988887777', address: 'Rua do Perfil, 55' }] },
         { rows: [{ id: 7, status: 'available' }] },
         { rows: [{ id: 23 }] },
         { rows: [] },
@@ -113,8 +119,8 @@ describe('adoptions controller', () => {
       const req = createRequest({
         body: {
           pet_id: '7',
-          adopter_name: 'Ana Silva',
-          adopter_email: 'ana@example.com',
+          adopter_name: 'Outro Nome',
+          adopter_email: 'outra-pessoa@example.com',
           adopter_phone: '11977776666',
           adopter_address: 'Rua Informada, 99',
           message: 'Mensagem própria.',
@@ -125,22 +131,20 @@ describe('adoptions controller', () => {
 
       await adoptionsController.create(req, res);
 
-      assert.equal(stub.matching('FROM adopters').length, 0);
+      assert.equal(stub.matching('FROM adopters').length, 1);
       const [insert] = stub.matching('INSERT INTO adoptions');
-      assert.deepEqual(insert.params.slice(3), [
-        '11977776666',
-        'Rua Informada, 99',
+      assert.deepEqual(insert.params.slice(1), [
+        3,
+        'Ana Silva',
+        'ana@example.com',
+        '11988887777',
+        'Rua do Perfil, 55',
         'Mensagem própria.',
       ]);
     });
 
-    test('falls back to the submitted data when the adopter profile is missing', async () => {
-      stub.queueResults(
-        { rows: [] },
-        { rows: [{ id: 7, status: 'available' }] },
-        { rows: [{ id: 24 }] },
-        { rows: [] },
-      );
+    test('requires a valid adopter profile for an authenticated request', async () => {
+      stub.queueResults({ rows: [] });
       const req = createRequest({
         body: { pet_id: '7', adopter_name: 'Ana Silva', adopter_email: 'ana@example.com' },
         session: { adopter: { id: 99 } },
@@ -149,9 +153,9 @@ describe('adoptions controller', () => {
 
       await adoptionsController.create(req, res);
 
-      const [insert] = stub.matching('INSERT INTO adoptions');
-      assert.deepEqual(insert.params.slice(3), [undefined, undefined, undefined]);
-      assert.equal(res.redirectPath, '/adoptions/success');
+      assert.equal(stub.matching('INSERT INTO adoptions').length, 0);
+      assert.equal(req.session.error, 'Conta de adotante não encontrada. Faça login novamente.');
+      assert.equal(res.redirectPath, '/login');
     });
 
     test('redirects back to the pet page when the request cannot be stored', async () => {
@@ -271,16 +275,8 @@ describe('adoptions controller', () => {
       assert.equal(res.redirectPath, '/admin/adoptions');
     });
 
-    test('allows re approving an adoption that already reserved its pet', async () => {
-      stub.queueResults(
-        { rows: [lockedAdoption({ adoption_status: 'approved', pet_status: 'reserved' })] },
-        { rows: [] },
-        { rows: [] },
-        { rows: [] },
-        { rows: [] },
-        { rows: [] },
-        { rows: [] },
-      );
+    test('does not duplicate history or audit when the status is unchanged', async () => {
+      stub.queueResults({ rows: [lockedAdoption({ adoption_status: 'approved', pet_status: 'reserved' })] });
       const req = createRequest({
         body: { status: 'approved' },
         params: { id: '12' },
@@ -290,8 +286,10 @@ describe('adoptions controller', () => {
 
       await adoptionsController.updateStatus(req, res);
 
-      assert.equal(stub.matching("UPDATE pets SET status = 'reserved'").length, 1);
-      assert.equal(req.session.success, 'Solicitação aprovada!');
+      assert.equal(stub.matching('UPDATE adoptions').length, 0);
+      assert.equal(stub.matching('INSERT INTO adoption_status_history').length, 0);
+      assert.equal(stub.matching('INSERT INTO audit_logs').length, 0);
+      assert.equal(req.session.success, 'A solicitação já está com o status informado.');
     });
 
     test('does not approve when another adoption for the same pet is approved', async () => {

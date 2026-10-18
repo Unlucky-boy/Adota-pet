@@ -145,6 +145,31 @@ describe('donation flow', { skip }, () => {
     assert.equal(donation.receipt_image.toString(), RECEIPT.toString());
   });
 
+  test('prevents another visitor from attaching a receipt and claiming the donation', async () => {
+    const donor = anonymous();
+    const created = await donor
+      .post('/donate')
+      .type('form')
+      .send({ amount: '50', payment_method: 'pix' })
+      .expect(302);
+    const code = receiptCodeOf(created);
+
+    const attacker = anonymous();
+    const response = await attacker
+      .post(`/donate/receipt/${code}/upload`)
+      .attach('receipt_image', RECEIPT, { filename: 'comprovante.png', contentType: 'image/png' })
+      .expect(302);
+
+    assert.equal(response.headers.location, '/donate');
+    const [donation] = await rowsOf(
+      'SELECT status, receipt_image FROM donations WHERE receipt_code = $1',
+      [code],
+    );
+    assert.equal(donation.status, 'pending_payment');
+    assert.equal(donation.receipt_image, null);
+    await attacker.get(`/donate/receipt/${code}`).expect(302).expect('Location', '/donate');
+  });
+
   test('reports an unknown code when attaching a receipt', async () => {
     await insertDonation({ receipt_code: 'REAL-0001' });
 
@@ -203,7 +228,10 @@ describe('donation flow', { skip }, () => {
     );
     assert.equal(logs.length, 1);
     assert.equal(logs[0].entity_id, donationId);
-    assert.deepEqual(logs[0].metadata, { status: 'completed' });
+    assert.deepEqual(logs[0].metadata, {
+      oldStatus: 'pending_review',
+      newStatus: 'completed',
+    });
   });
 
   test('counts only the completed donations in the admin balance', async () => {

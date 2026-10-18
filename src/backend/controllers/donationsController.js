@@ -3,6 +3,20 @@ const db = require('../config/db');
 const { isValidEmail, isValidId, parseStrictAmount } = require('../utils/validation');
 const settingsController = require('./settingsController');
 
+function canAccessDonation(req, donation) {
+  if (req.session.user) return true;
+
+  const isRegisteredOwner = Boolean(req.session.adopter && (
+    donation.adopter_id === req.session.adopter.id
+    || (donation.adopter_id === null && donation.donor_email
+      && req.session.adopter.email.toLowerCase() === donation.donor_email.toLowerCase())
+  ));
+  const ownsAnonymousReceipt = Boolean(req.session.donationReceiptCodes
+    && req.session.donationReceiptCodes.includes(donation.receipt_code));
+
+  return isRegisteredOwner || ownsAnonymousReceipt;
+}
+
 const donationsController = {
   // GET /donate — Página de doação
   async donatePage(req, res) {
@@ -38,7 +52,14 @@ const donationsController = {
 
   // POST /donate — Processar doação
   async donate(req, res) {
-    const { amount, payment_method, donor_name, donor_email } = req.body;
+    let { donor_name, donor_email } = req.body;
+    const { amount, payment_method } = req.body;
+    const adopterId = req.session.adopter?.id || null;
+
+    if (req.session.adopter) {
+      donor_name = req.session.adopter.name;
+      donor_email = req.session.adopter.email;
+    }
 
     // Preservar dados do form
     req.session.formData = { amount, payment_method, donor_name, donor_email };
@@ -89,11 +110,14 @@ const donationsController = {
 
       // Inserir doação
       await db.query(
-        `INSERT INTO donations (amount, payment_method, donor_name, donor_email, status, receipt_code, receipt_image, receipt_image_mime_type)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        `INSERT INTO donations
+           (amount, payment_method, adopter_id, donor_name, donor_email, status,
+            receipt_code, receipt_image, receipt_image_mime_type)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
         [
           parsedAmount.toFixed(2),
           payment_method,
+          adopterId,
           donor_name ? donor_name.trim() : null,
           donor_email ? donor_email.toLowerCase().trim() : null,
           status,
@@ -135,16 +159,42 @@ const donationsController = {
     try {
       const receiptImageBuffer = req.file.buffer;
       const receiptImageMime = req.file.mimetype;
-      const result = await db.query(
-        `UPDATE donations SET receipt_image = $1, receipt_image_mime_type = $2, status = 'pending_review'
-         WHERE receipt_code = $3 AND payment_method = 'pix'
-         RETURNING id`,
-        [receiptImageBuffer, receiptImageMime, code]
-      );
+      const result = await db.transaction(async (client) => {
+        const donationResult = await client.query(
+          `SELECT id, adopter_id, donor_email, receipt_code, status
+           FROM donations
+           WHERE receipt_code = $1 AND payment_method = 'pix'
+           FOR UPDATE`,
+          [code]
+        );
 
-      if (result.rows.length === 0) {
+        if (donationResult.rows.length === 0) return { notFound: true };
+        const donation = donationResult.rows[0];
+        if (!canAccessDonation(req, donation)) return { unauthorized: true };
+        if (donation.status !== 'pending_payment') return { invalidState: true };
+
+        await client.query(
+          `UPDATE donations
+           SET receipt_image = $1, receipt_image_mime_type = $2, status = 'pending_review'
+           WHERE id = $3`,
+          [receiptImageBuffer, receiptImageMime, donation.id]
+        );
+        return { updated: true };
+      });
+
+      if (result.notFound) {
         req.session.error = 'Doação não encontrada.';
         return res.redirect('/donate');
+      }
+
+      if (result.unauthorized) {
+        req.session.error = 'Você não tem acesso a esta doação.';
+        return res.redirect('/donate');
+      }
+
+      if (result.invalidState) {
+        req.session.error = 'Esta doação não está aguardando comprovante.';
+        return res.redirect(`/donate/receipt/${code}`);
       }
 
       req.session.success = 'Comprovante enviado com sucesso! Aguarde a confirmação da ONG.';
@@ -173,12 +223,7 @@ const donationsController = {
       }
 
       const donation = result.rows[0];
-      const isAdmin = Boolean(req.session.user);
-      const isOwner = Boolean(req.session.adopter && donation.donor_email &&
-        req.session.adopter.email.toLowerCase() === donation.donor_email.toLowerCase());
-      const ownsReceipt = Boolean(req.session.donationReceiptCodes &&
-        req.session.donationReceiptCodes.includes(code));
-      if (!isAdmin && !isOwner && !ownsReceipt) {
+      if (!canAccessDonation(req, donation)) {
         req.session.error = 'Você não tem acesso a este comprovante.';
         return res.redirect('/donate');
       }
@@ -229,19 +274,16 @@ const donationsController = {
   async serveReceiptImage(req, res) {
     try {
       const result = await db.query(
-        'SELECT id, receipt_code, donor_email, receipt_image, receipt_image_mime_type FROM donations WHERE id = $1',
+        `SELECT id, receipt_code, adopter_id, donor_email,
+                receipt_image, receipt_image_mime_type
+         FROM donations WHERE id = $1`,
         [req.params.id]
       );
       if (result.rows.length === 0 || !result.rows[0].receipt_image) {
         return res.status(404).send('Comprovante não encontrado.');
       }
       const donation = result.rows[0];
-      const isAdmin = Boolean(req.session.user);
-      const isOwner = Boolean(req.session.adopter && donation.donor_email &&
-        req.session.adopter.email.toLowerCase() === donation.donor_email.toLowerCase());
-      const ownsAnonymousReceipt = Boolean(req.session.donationReceiptCodes &&
-        req.session.donationReceiptCodes.includes(donation.receipt_code));
-      if (!isAdmin && !isOwner && !ownsAnonymousReceipt) {
+      if (!canAccessDonation(req, donation)) {
         return res.status(403).send('Acesso não autorizado.');
       }
       res.set('Content-Type', donation.receipt_image_mime_type || 'image/png');
@@ -263,15 +305,40 @@ const donationsController = {
     }
 
     try {
-      await db.query(
-        'UPDATE donations SET status = $1 WHERE id = $2',
-        [status, req.params.id]
-      );
-      await db.query(
-        `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, metadata)
-         VALUES ($1, 'donation_status_changed', 'donation', $2, $3::jsonb)`,
-        [req.session.user.id, req.params.id, JSON.stringify({ status })]
-      );
+      const result = await db.transaction(async (client) => {
+        const donationResult = await client.query(
+          'SELECT id, status FROM donations WHERE id = $1 FOR UPDATE',
+          [req.params.id]
+        );
+        if (donationResult.rows.length === 0) return { notFound: true };
+
+        const donation = donationResult.rows[0];
+        if (donation.status !== 'pending_review') return { invalidState: true };
+
+        await client.query(
+          'UPDATE donations SET status = $1 WHERE id = $2',
+          [status, donation.id]
+        );
+        await client.query(
+          `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, metadata)
+           VALUES ($1, 'donation_status_changed', 'donation', $2, $3::jsonb)`,
+          [req.session.user.id, donation.id, JSON.stringify({
+            oldStatus: donation.status,
+            newStatus: status,
+          })]
+        );
+        return { updated: true };
+      });
+
+      if (result.notFound) {
+        req.session.error = 'Doação não encontrada.';
+        return res.redirect('/admin/donations');
+      }
+
+      if (result.invalidState) {
+        req.session.error = 'Somente doações aguardando análise podem ser atualizadas.';
+        return res.redirect('/admin/donations');
+      }
 
       const label = status === 'completed' ? 'confirmada' : 'rejeitada';
       req.session.success = `Doação ${label} com sucesso!`;

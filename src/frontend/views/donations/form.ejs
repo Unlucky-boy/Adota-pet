@@ -92,6 +92,7 @@
                   placeholder="Seu nome"
                   value="<%= (formData && formData.donor_name) ? formData.donor_name : '' %>"
                   autocomplete="name"
+                  <%= (typeof adopter !== 'undefined' && adopter) ? 'readonly' : '' %>
                 >
               </div>
               <div class="form__group">
@@ -103,6 +104,7 @@
                   placeholder="seu@email.com"
                   value="<%= (formData && formData.donor_email) ? formData.donor_email : '' %>"
                   autocomplete="email"
+                  <%= (typeof adopter !== 'undefined' && adopter) ? 'readonly' : '' %>
                 >
               </div>
             </div>

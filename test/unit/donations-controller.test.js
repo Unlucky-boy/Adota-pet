@@ -13,6 +13,7 @@ function donationBody(overrides = {}) {
 function donationRow(overrides = {}) {
   return {
     id: 3,
+    adopter_id: null,
     receipt_code: 'ABCD-123',
     donor_email: 'joao@example.com',
     amount: '50.00',
@@ -139,7 +140,7 @@ describe('donations controller', () => {
 
       const [insert] = stub.matching('INSERT INTO donations');
       // Espaços em branco passam pela validação e são gravados como string vazia.
-      assert.equal(insert.params[3], '');
+      assert.equal(insert.params[4], '');
       assert.equal(req.session.error, undefined);
     });
 
@@ -151,8 +152,8 @@ describe('donations controller', () => {
       await donationsController.donate(req, res);
 
       const [insert] = stub.matching('INSERT INTO donations');
-      assert.equal(insert.params[2], null);
       assert.equal(insert.params[3], null);
+      assert.equal(insert.params[4], null);
     });
 
     test('records a PIX donation without a receipt as pending payment', async () => {
@@ -163,9 +164,9 @@ describe('donations controller', () => {
       await donationsController.donate(req, res);
 
       const [insert] = stub.matching('INSERT INTO donations');
-      assert.equal(insert.params[4], 'pending_payment');
-      assert.equal(insert.params[6], null);
+      assert.equal(insert.params[5], 'pending_payment');
       assert.equal(insert.params[7], null);
+      assert.equal(insert.params[8], null);
       assert.equal(req.session.success, 'Doação registrada! Faça a transferência PIX e envie o comprovante.');
     });
 
@@ -181,15 +182,16 @@ describe('donations controller', () => {
       await donationsController.donate(req, res);
 
       const [insert] = stub.matching('INSERT INTO donations');
-      assert.deepEqual(insert.params.slice(0, 5), [
+      assert.deepEqual(insert.params.slice(0, 6), [
         '125.50',
         'pix',
+        null,
         'João Souza',
         'joao@example.com',
         'pending_review',
       ]);
-      assert.equal(insert.params[6].toString(), 'receipt');
-      assert.equal(insert.params[7], 'image/png');
+      assert.equal(insert.params[7].toString(), 'receipt');
+      assert.equal(insert.params[8], 'image/png');
       assert.match(res.redirectPath, /^\/donate\/receipt\/[A-Z0-9]+-[A-Z0-9]+$/);
       assert.equal(req.session.formData, undefined);
       assert.match(req.session.success, /comprovante/);
@@ -292,25 +294,31 @@ describe('donations controller', () => {
     });
 
     test('uploads a PIX receipt and moves the donation to review', async () => {
-      stub.queueResults({ rows: [{ id: 3 }] });
+      stub.queueResults(
+        { rows: [donationRow({ status: 'pending_payment', receipt_image: null })] },
+        { rows: [] },
+      );
       const req = createRequest({
         params: { code: 'ABCD-123' },
         file: { buffer: Buffer.from('receipt'), mimetype: 'application/pdf' },
-        session: {},
+        session: { donationReceiptCodes: ['ABCD-123'] },
       });
       const res = createResponse();
 
       await donationsController.uploadReceipt(req, res);
 
       const [update] = stub.matching('UPDATE donations SET receipt_image');
-      assert.deepEqual(update.params, [Buffer.from('receipt'), 'application/pdf', 'ABCD-123']);
+      assert.deepEqual(update.params, [Buffer.from('receipt'), 'application/pdf', 3]);
       assert.equal(req.session.success, 'Comprovante enviado com sucesso! Aguarde a confirmação da ONG.');
       assert.equal(res.redirectPath, '/donate/receipt/ABCD-123');
       assert.deepEqual(req.session.donationReceiptCodes, ['ABCD-123']);
     });
 
     test('does not duplicate a receipt code already in the session', async () => {
-      stub.queueResults({ rows: [{ id: 3 }] });
+      stub.queueResults(
+        { rows: [donationRow({ status: 'pending_payment', receipt_image: null })] },
+        { rows: [] },
+      );
       const req = createRequest({
         params: { code: 'ABCD-123' },
         file: { buffer: Buffer.from('receipt'), mimetype: 'image/png' },
@@ -321,6 +329,22 @@ describe('donations controller', () => {
       await donationsController.uploadReceipt(req, res);
 
       assert.deepEqual(req.session.donationReceiptCodes, ['ABCD-123']);
+    });
+
+    test('blocks a visitor from attaching a receipt to another donation', async () => {
+      stub.queueResults({ rows: [donationRow({ status: 'pending_payment', receipt_image: null })] });
+      const req = createRequest({
+        params: { code: 'ABCD-123' },
+        file: { buffer: Buffer.from('receipt'), mimetype: 'image/png' },
+        session: {},
+      });
+      const res = createResponse();
+
+      await donationsController.uploadReceipt(req, res);
+
+      assert.equal(stub.matching('UPDATE donations').length, 0);
+      assert.equal(req.session.error, 'Você não tem acesso a esta doação.');
+      assert.equal(res.redirectPath, '/donate');
     });
 
     test('reports a failure when the receipt cannot be stored', async () => {
@@ -520,7 +544,11 @@ describe('donations controller', () => {
     });
 
     test('confirms a PIX donation and records the audit entry', async () => {
-      stub.queueResults({ rows: [] }, { rows: [] });
+      stub.queueResults(
+        { rows: [{ id: 3, status: 'pending_review' }] },
+        { rows: [] },
+        { rows: [] },
+      );
       const req = createRequest({
         body: { status: 'completed' },
         params: { id: '3' },
@@ -531,14 +559,21 @@ describe('donations controller', () => {
       await donationsController.updateStatus(req, res);
 
       const [update] = stub.matching('UPDATE donations SET status = $1');
-      assert.deepEqual(update.params, ['completed', '3']);
+      assert.deepEqual(update.params, ['completed', 3]);
       const [audit] = stub.matching('INSERT INTO audit_logs');
-      assert.deepEqual(audit.params, [1, '3', JSON.stringify({ status: 'completed' })]);
+      assert.deepEqual(audit.params, [1, 3, JSON.stringify({
+        oldStatus: 'pending_review',
+        newStatus: 'completed',
+      })]);
       assert.equal(req.session.success, 'Doação confirmada com sucesso!');
     });
 
     test('rejects a PIX donation and records the audit entry', async () => {
-      stub.queueResults({ rows: [] }, { rows: [] });
+      stub.queueResults(
+        { rows: [{ id: 3, status: 'pending_review' }] },
+        { rows: [] },
+        { rows: [] },
+      );
       const req = createRequest({
         body: { status: 'rejected' },
         params: { id: '3' },

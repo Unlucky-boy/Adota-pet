@@ -121,75 +121,82 @@ const dashboardController = {
   },
 
   async index(req, res) {
-    if (!req.session.adopter) {
-      req.session.error = 'Por favor, faça login para acessar o painel.';
-      return res.redirect('/login');
-    }
-
     try {
-      // Carregar dados do usuário
       const adopterId = req.session.adopter.id;
-      const adopterEmail = req.session.adopter.email;
-      
-      const adopterResult = await db.query('SELECT * FROM adopters WHERE id = $1', [adopterId]);
+      const adopterResult = await db.query(
+        `SELECT id, name, email, phone, address, created_at
+         FROM adopters
+         WHERE id = $1`,
+        [adopterId]
+      );
       const adopter = adopterResult.rows[0];
       if (!adopter) {
         req.session.error = 'Conta de adotante não encontrada.';
         return req.session.destroy(() => res.redirect('/login'));
       }
 
-      // Carregar histórico de doações do usuário
-      const donationsResult = await db.query(
-        'SELECT * FROM donations WHERE donor_email = $1 ORDER BY created_at DESC',
-        [adopterEmail]
-      );
+      const adopterEmail = adopter.email;
+      const [donationsResult, volunteerResult, adoptionsResult] = await Promise.all([
+        db.query(
+          `SELECT id, amount, payment_method, status, receipt_code,
+                  receipt_image IS NOT NULL AS has_receipt, created_at
+           FROM donations
+           WHERE adopter_id = $1
+              OR (adopter_id IS NULL AND LOWER(donor_email) = LOWER($2))
+           ORDER BY created_at DESC`,
+          [adopterId, adopterEmail]
+        ),
+        db.query(
+          `SELECT id, availability, status, reviewed_at, created_at
+           FROM volunteers
+           WHERE adopter_id = $1
+              OR (adopter_id IS NULL AND LOWER(email) = LOWER($2))
+           ORDER BY created_at DESC`,
+          [adopterId, adopterEmail]
+        ),
+        db.query(
+          `SELECT a.id, a.status, a.created_at,
+                  p.name AS pet_name, p.image_url AS pet_image_url,
+                  v.visit_date, v.visit_time, v.visit_type,
+                  v.status AS visit_status
+           FROM adoptions a
+           JOIN pets p ON p.id = a.pet_id
+           LEFT JOIN LATERAL (
+             SELECT visit_date, visit_time, visit_type, status
+             FROM visits
+             WHERE adoption_id = a.id
+             ORDER BY
+               CASE WHEN status = 'scheduled' THEN 0 ELSE 1 END,
+               visit_date DESC,
+               visit_time DESC
+             LIMIT 1
+           ) v ON TRUE
+           WHERE a.adopter_id = $1
+              OR (a.adopter_id IS NULL AND LOWER(a.adopter_email) = LOWER($2))
+           ORDER BY a.created_at DESC`,
+          [adopterId, adopterEmail]
+        ),
+      ]);
+
       const userDonations = donationsResult.rows;
-
-      // Calcular valor total doado
-      const totalDonatedResult = await db.query(
-        "SELECT SUM(amount) as total FROM donations WHERE donor_email = $1 AND status = 'completed'",
-        [adopterEmail]
-      );
-      const totalDonated = totalDonatedResult.rows[0]?.total || 0;
-
-      // Carregar solicitações de voluntariado do usuário
-      const volunteerResult = await db.query(
-        'SELECT * FROM volunteers WHERE email = $1 ORDER BY created_at DESC',
-        [adopterEmail]
-      );
       const userVolunteers = volunteerResult.rows;
-
-      // Carregar solicitações de adoção e visitas agendadas
-      const adoptionsResult = await db.query(
-        `SELECT a.*, p.name as pet_name, p.image_url as pet_image_url, 
-                v.visit_date, v.visit_time, v.status as visit_status 
-         FROM adoptions a
-         LEFT JOIN pets p ON a.pet_id = p.id
-         LEFT JOIN LATERAL (
-           SELECT visit_date, visit_time, status
-           FROM visits
-           WHERE adoption_id = a.id
-           ORDER BY visit_date ASC, visit_time ASC
-           LIMIT 1
-         ) v ON TRUE
-         WHERE a.adopter_email = $1
-         ORDER BY a.created_at DESC`,
-        [adopterEmail]
-      );
       const userAdoptions = adoptionsResult.rows;
+      const totalDonated = userDonations
+        .filter((donation) => donation.status === 'completed')
+        .reduce((total, donation) => total + Number(donation.amount), 0);
 
       res.render('dashboard/index', {
-        title: 'Meu Painel — Adota Pet',
+        title: 'Meu Perfil — Adota Pet',
         adopter,
         userDonations,
-        totalDonated: parseFloat(totalDonated),
+        totalDonated,
         userVolunteers,
-        userAdoptions
+        userAdoptions,
       });
     } catch (err) {
-      console.error('Erro ao carregar dashboard:', err);
-      req.session.error = 'Erro interno.';
-      res.redirect('/');
+      console.error('Erro ao carregar perfil:', err);
+      req.session.error = 'Não foi possível carregar seu perfil. Tente novamente.';
+      return res.redirect('/');
     }
   },
 
@@ -265,12 +272,22 @@ const dashboardController = {
     const period = getPeriod(req);
     try {
       const result = await db.query(
-        `WITH months AS (
+        `WITH bounds AS (
+          SELECT COALESCE(
+                   DATE_TRUNC('month', $1::date),
+                   CASE WHEN $2::date IS NOT NULL
+                        THEN DATE_TRUNC('month', $2::date) - INTERVAL '11 months'
+                        ELSE DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '11 months'
+                   END
+                 ) AS start_month,
+                 COALESCE(DATE_TRUNC('month', $2::date), DATE_TRUNC('month', CURRENT_DATE)) AS end_month
+        ), months AS (
           SELECT generate_series(
-            DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '11 months',
-            DATE_TRUNC('month', CURRENT_DATE),
+            start_month,
+            end_month,
             INTERVAL '1 month'
           ) AS month_start
+          FROM bounds
         )
         SELECT TO_CHAR(m.month_start, 'YYYY-MM') AS month,
                COALESCE((SELECT SUM(d.amount) FROM donations d

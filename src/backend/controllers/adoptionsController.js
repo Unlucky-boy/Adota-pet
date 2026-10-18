@@ -5,16 +5,28 @@ const adoptionsController = {
   // POST /adoptions — Enviar solicitação
   async create(req, res) {
     let { pet_id, adopter_name, adopter_email, adopter_phone, adopter_address, message } = req.body;
+    let adopterId = null;
 
     try {
-      // Se estiver logado, puxar os dados completos do banco caso não venham no formulário
-      if (req.session.adopter && (!adopter_phone || !adopter_address)) {
-        const adopterData = await db.query('SELECT phone, address FROM adopters WHERE id = $1', [req.session.adopter.id]);
-        if (adopterData.rows.length > 0) {
-          adopter_phone = adopter_phone || adopterData.rows[0].phone;
-          adopter_address = adopter_address || adopterData.rows[0].address;
-          message = message || 'Intenção de adoção registrada via sistema (Usuário Logado).';
+      // Para uma sessao autenticada, os dados cadastrais do banco sao a fonte confiavel.
+      if (req.session.adopter) {
+        const adopterData = await db.query(
+          'SELECT id, name, email, phone, address FROM adopters WHERE id = $1',
+          [req.session.adopter.id]
+        );
+
+        if (adopterData.rows.length === 0) {
+          req.session.error = 'Conta de adotante não encontrada. Faça login novamente.';
+          return res.redirect('/login');
         }
+
+        const loggedAdopter = adopterData.rows[0];
+        adopterId = loggedAdopter.id;
+        adopter_name = loggedAdopter.name;
+        adopter_email = loggedAdopter.email;
+        adopter_phone = loggedAdopter.phone;
+        adopter_address = loggedAdopter.address;
+        message = message || 'Intenção de adoção registrada via sistema (Usuário Logado).';
       }
 
       // Verificar se pet existe e está disponível
@@ -36,10 +48,11 @@ const adoptionsController = {
 
       await db.transaction(async (client) => {
         const adoptionResult = await client.query(
-          `INSERT INTO adoptions (pet_id, adopter_name, adopter_email, adopter_phone, adopter_address, message)
-           VALUES ($1, $2, $3, $4, $5, $6)
+          `INSERT INTO adoptions
+             (pet_id, adopter_id, adopter_name, adopter_email, adopter_phone, adopter_address, message)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
            RETURNING id`,
-          [pet_id, adopter_name, adopter_email, adopter_phone, adopter_address, message]
+          [pet_id, adopterId, adopter_name, adopter_email, adopter_phone, adopter_address, message]
         );
         await client.query(
           `INSERT INTO adoption_status_history (adoption_id, new_status)
@@ -107,6 +120,10 @@ const adoptionsController = {
         }
 
         const adoption = adoptionResult.rows[0];
+
+        if (adoption.adoption_status === status) {
+          return { noChange: true };
+        }
 
         if (status === 'approved') {
           if (adoption.pet_status !== 'available' &&
@@ -190,6 +207,11 @@ const adoptionsController = {
 
       if (result.conflict) {
         req.session.error = 'Este pet não está disponível para aprovação.';
+        return res.redirect('/admin/adoptions');
+      }
+
+      if (result.noChange) {
+        req.session.success = 'A solicitação já está com o status informado.';
         return res.redirect('/admin/adoptions');
       }
 
