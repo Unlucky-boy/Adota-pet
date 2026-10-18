@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/backend/server.js",
     "dev": "nodemon src/backend/server.js",
-    "test": "node --env-file=.env.test --test --test-concurrency=1 \"test/unit/*.test.js\" \"test/integration/*.test.js\"",
+    "test": "node scripts/run-tests.js",
     "test:unit": "node --test \"test/unit/*.test.js\"",
     "test:watch": "node --test --watch \"test/unit/*.test.js\"",
     "test:coverage": "node --test --test-concurrency=1 --experimental-test-coverage \"test/unit/*.test.js\" \"test/integration/*.test.js\"",
