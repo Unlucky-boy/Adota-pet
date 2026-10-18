@@ -2,7 +2,7 @@ const { spawnSync } = require('node:child_process');
 const { readdirSync } = require('node:fs');
 const path = require('node:path');
 
-const projectDirectory = process.cwd();
+const projectDirectory = path.resolve(__dirname, '..');
 
 function findTestFiles(directory) {
   return readdirSync(directory, { withFileTypes: true })
@@ -51,7 +51,7 @@ try {
   const testFiles = [
     ...findTestFiles(path.join(projectDirectory, 'test', 'unit')),
     ...findTestFiles(path.join(projectDirectory, 'test', 'integration')),
-  ];
+  ].map((testFile) => path.relative(projectDirectory, testFile));
   const tests = run(process.execPath, [
     '--env-file=.env.test',
     '--test',
