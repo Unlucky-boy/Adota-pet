@@ -1,7 +1,9 @@
 const assert = require('node:assert/strict');
 const { describe, test, beforeEach, afterEach } = require('node:test');
 
-const { createRequest, createResponse, stubDb } = require('../helpers/controller-harness');
+const {
+  createRequest, createResponse, captureConsoleError, stubDb,
+} = require('../helpers/controller-harness');
 const adoptionsController = require('../../src/backend/controllers/adoptionsController');
 
 /** Linha devolvida pelo SELECT ... FOR UPDATE de updateStatus/confirmDelivery. */
@@ -17,13 +19,16 @@ function lockedAdoption(overrides = {}) {
 
 describe('adoptions controller', () => {
   let stub;
+  let consoleErrors;
 
   beforeEach(() => {
     stub = stubDb();
+    consoleErrors = captureConsoleError();
   });
 
   afterEach(() => {
     stub.restore();
+    consoleErrors.restore();
   });
 
   describe('create', () => {

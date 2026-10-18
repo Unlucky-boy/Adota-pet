@@ -63,6 +63,23 @@ function createResponse() {
 }
 
 /**
+ * Captura logs esperados de erro em cenários que simulam falhas do banco.
+ * O chamador deve restaurar no afterEach para não esconder erros de outras suítes.
+ */
+function captureConsoleError() {
+  const originalError = console.error;
+  const calls = [];
+  console.error = (...args) => calls.push(args);
+
+  return {
+    calls,
+    restore() {
+      console.error = originalError;
+    },
+  };
+}
+
+/**
  * Colapsa espaços em branco do SQL para que as asserções sobrevivam a
  * reindentação da query.
  */
@@ -133,4 +150,10 @@ function stubDb() {
   return stub;
 }
 
-module.exports = { createRequest, createResponse, stubDb, normalize };
+module.exports = {
+  createRequest,
+  createResponse,
+  captureConsoleError,
+  stubDb,
+  normalize,
+};

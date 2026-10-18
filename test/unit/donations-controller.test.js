@@ -1,7 +1,9 @@
 const assert = require('node:assert/strict');
 const { describe, test, beforeEach, afterEach } = require('node:test');
 
-const { createRequest, createResponse, stubDb } = require('../helpers/controller-harness');
+const {
+  createRequest, createResponse, captureConsoleError, stubDb,
+} = require('../helpers/controller-harness');
 const donationsController = require('../../src/backend/controllers/donationsController');
 
 /** Corpo mínimo aceito por donate — os testes sobrescrevem o que interessa. */
@@ -26,13 +28,16 @@ function donationRow(overrides = {}) {
 
 describe('donations controller', () => {
   let stub;
+  let consoleErrors;
 
   beforeEach(() => {
     stub = stubDb();
+    consoleErrors = captureConsoleError();
   });
 
   afterEach(() => {
     stub.restore();
+    consoleErrors.restore();
   });
 
   describe('donate', () => {
