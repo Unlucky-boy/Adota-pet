@@ -87,7 +87,9 @@
         adoption_checklist_updated: 'Checklist de adoção atualizado',
         adoption_delivery_confirmed: 'Entrega de adoção confirmada',
         donation_status_changed: 'Status de doação alterado',
-        volunteer_status_changed: 'Status de voluntário alterado'
+        volunteer_status_changed: 'Status de voluntário alterado',
+        visit_created: 'Visita agendada',
+        visit_status_changed: 'Status de visita alterado'
       }; %>
       <% const auditEntityLabels = {
         pet_health_record: 'Registro veterinário',
@@ -99,15 +101,35 @@
         expense: 'Despesa',
         adoption: 'Adoção',
         donation: 'Doação',
-        volunteer: 'Voluntário'
+        volunteer: 'Voluntário',
+        visit: 'Visita'
       }; %>
-      <div class="table-container"><table class="table audit-table"><thead><tr><th scope="col">Data</th><th scope="col">Usuário</th><th scope="col">Ação</th><th scope="col">Entidade</th><th scope="col">Pet</th></tr></thead><tbody>
-        <% auditLogs.forEach(function(log) { const metadata = log.metadata || {}; %>
+      <% const auditDetailLabels = {
+        oldStatus: 'Anterior', newStatus: 'Novo', status: 'Status', item: 'Item', completed: 'Concluído',
+        signedBy: 'Assinado por', recordType: 'Tipo', recordDate: 'Data', provider: 'Responsável', cost: 'Custo',
+        vaccineName: 'Vacina', administeredAt: 'Aplicada em', nextDueAt: 'Próxima dose', name: 'Nome',
+        category: 'Categoria', quantity: 'Quantidade', unit: 'Unidade', minimumQuantity: 'Mínimo', capacity: 'Capacidade',
+        fosterHomeId: 'Lar', startDate: 'Início', endDate: 'Fim', volunteerId: 'Voluntário', shiftDate: 'Data',
+        startTime: 'Início', endTime: 'Fim', amount: 'Valor', expenseDate: 'Data', vendor: 'Fornecedor',
+        adoptionId: 'Adoção', visitDate: 'Data', visitTime: 'Horário', visitType: 'Tipo'
+      }; %>
+      <% const auditValueLabels = {
+        pending: 'Pendente', approved: 'Aprovado', rejected: 'Rejeitado', completed: 'Concluído',
+        cancelled: 'Cancelado', scheduled: 'Agendado', under_review: 'Em análise',
+        home_visit: 'Visita domiciliar', interview: 'Entrevista', true: 'Sim', false: 'Não'
+      }; %>
+      <div class="table-container"><table class="table audit-table"><thead><tr><th scope="col">Data</th><th scope="col">Usuário</th><th scope="col">Ação</th><th scope="col">Entidade</th><th scope="col">Alteração</th><th scope="col">Pet</th></tr></thead><tbody>
+        <% auditLogs.forEach(function(log) { const metadata = log.metadata || {}; const details = Object.entries(metadata).filter(function(entry) { return entry[0] !== 'petId' && entry[1] !== null && entry[1] !== ''; }); %>
           <tr>
             <td><time datetime="<%= new Date(log.created_at).toISOString() %>"><%= new Date(log.created_at).toLocaleString('pt-BR') %></time></td>
             <td><span class="audit-user"><i data-lucide="user-round" aria-hidden="true"></i><%= log.user_name || 'Sistema' %></span></td>
             <td><span class="audit-action"><%= auditActionLabels[log.action] || log.action.replace(/_/g, ' ') %></span></td>
             <td><span class="audit-entity"><%= auditEntityLabels[log.entity_type] || log.entity_type %></span></td>
+            <td><div class="audit-details">
+              <% if (details.length > 0) { details.forEach(function(detail) { %>
+                <span class="audit-detail"><b><%= auditDetailLabels[detail[0]] || detail[0] %>:</b> <%= Object.prototype.hasOwnProperty.call(auditValueLabels, String(detail[1])) ? auditValueLabels[String(detail[1])] : detail[1] %></span>
+              <% }); } else { %><span class="audit-detail--empty">Sem detalhes adicionais</span><% } %>
+            </div></td>
             <td><% if (log.pet_name) { %><span class="audit-pet"><i data-lucide="paw-print" aria-hidden="true"></i><%= log.pet_name %></span><% } else { %><span class="audit-detail--empty">Não relacionado a pet</span><% } %></td>
           </tr>
         <% }); %>

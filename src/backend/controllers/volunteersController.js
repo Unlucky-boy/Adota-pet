@@ -4,16 +4,28 @@ const { isValidEmail, isValidId, isValidPhone } = require('../utils/validation')
 const volunteersController = {
   // GET /volunteer — Formulário público de inscrição
   formPage(req, res) {
+    const formData = req.session.formData || (req.session.adopter ? {
+      name: req.session.adopter.name,
+      email: req.session.adopter.email,
+    } : {});
+
     res.render('volunteer/form', {
       title: 'Seja Voluntário — Adota Pet',
-      formData: req.session.formData || {},
+      formData,
     });
     delete req.session.formData;
   },
 
   // POST /volunteer — Processar inscrição
   async register(req, res) {
-    const { name, email, phone, availability, motivation } = req.body;
+    let { name, email } = req.body;
+    const { phone, availability, motivation } = req.body;
+    const adopterId = req.session.adopter?.id || null;
+
+    if (req.session.adopter) {
+      name = req.session.adopter.name;
+      email = req.session.adopter.email;
+    }
 
     // Preservar dados em caso de erro
     req.session.formData = { name, email, phone, availability, motivation };
@@ -47,9 +59,10 @@ const volunteersController = {
 
       // Inserir voluntário
       await db.query(
-        `INSERT INTO volunteers (name, email, phone, availability, motivation)
-         VALUES ($1, $2, $3, $4, $5)`,
+        `INSERT INTO volunteers (adopter_id, name, email, phone, availability, motivation)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
         [
+          adopterId,
           name.trim(),
           email.toLowerCase().trim(),
           phone.trim(),

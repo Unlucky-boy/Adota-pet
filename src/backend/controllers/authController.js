@@ -7,6 +7,9 @@ const authController = {
     if (req.session.user) {
       return res.redirect('/admin/pets');
     }
+    if (req.session.adopter) {
+      return res.redirect('/profile');
+    }
     res.render('auth/login', { title: 'Login — Adota Pet' });
   },
 
@@ -32,6 +35,7 @@ const authController = {
           name: user.name,
           email: user.email,
         };
+        delete req.session.adopter;
 
         req.session.success = `Bem-vindo(a), ${user.name}!`;
         return res.redirect('/admin/pets');
@@ -61,6 +65,7 @@ const authController = {
           name: adopter.name,
           email: adopter.email,
         };
+        delete req.session.user;
 
         req.session.success = `Bem-vindo(a), ${adopter.name}!`;
         return res.redirect('/dashboard');

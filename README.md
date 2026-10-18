@@ -83,14 +83,16 @@ npm run dev
 ### 7. Rode os testes
 
 ```bash
-npm test                  # suíte completa
+npm test                  # suíte completa; inicia e remove o banco de teste automaticamente
 npm run test:unit         # só unitários (não precisa de Docker)
 
 npm run db:test:up        # sobe o banco de teste isolado (porta 5434)
 npm run test:integration  # testes de integração
 ```
 
-Sem o banco de teste no ar, `npm test` roda os unitários e pula a integração
+`npm test` exige Docker em execução. O comando inicia o PostgreSQL isolado na
+porta 5434, executa testes unitários, integrados e funcionais e remove o
+contêiner ao terminar, inclusive quando algum teste falha.
 com uma mensagem explicando como subi-lo. Detalhes em
 [CONTRIBUTING.md](CONTRIBUTING.md#-testes-automatizados).
 

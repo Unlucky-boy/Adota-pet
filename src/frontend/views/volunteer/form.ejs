@@ -20,6 +20,7 @@
               placeholder="Seu nome completo"
               value="<%= (formData && formData.name) ? formData.name : '' %>"
               autocomplete="name"
+              <%= (typeof adopter !== 'undefined' && adopter) ? 'readonly' : '' %>
             >
           </div>
           <div class="form__group">
@@ -48,6 +49,7 @@
             placeholder="seu@email.com"
             value="<%= (formData && formData.email) ? formData.email : '' %>"
             autocomplete="email"
+            <%= (typeof adopter !== 'undefined' && adopter) ? 'readonly' : '' %>
           >
         </div>
         <div class="form__group">

@@ -6,6 +6,64 @@
 
 ---
 
+## ✅ Estabilização, refinamento e testes funcionais — US31
+
+| Campo | Registro |
+|---|---|
+| Participantes | Equipe ACE7 |
+| Data | 18/10/2026 |
+| Formato | Correção orientada por regressão, testes funcionais HTTP e conferência no PostgreSQL |
+| Resultado funcional | 7/7 fluxos aprovados |
+| Suíte final | `npm test`: 147 testes, 22 suítes, 0 falhas |
+
+Foram consolidados os quatro problemas encontrados na US30 e encontrados três
+novos pontos de refinamento na US31. O bug de severidade alta permitia anexar
+comprovante a uma doação de outra sessão; a correção valida propriedade e estado
+dentro de uma transação. Em adoções, operações sem mudança deixaram de produzir
+histórico falso. Em doações, a revisão administrativa agora aceita somente itens
+em análise e registra a transição completa na auditoria.
+
+- Issues e severidades: [`docs/US31_ISSUES.md`](US31_ISSUES.md)
+- Resultado por fluxo: [`docs/US31_FUNCTIONAL_TEST_REPORT.md`](US31_FUNCTIONAL_TEST_REPORT.md)
+- Situação do board: [`docs/US31_BOARD.md`](US31_BOARD.md)
+- Teste executável: `test/integration/core-functional-flows.test.js`
+
+Decisão: código liberado para entrega final, sem defeito conhecido aberto. A
+publicação dos vínculos externos de issue/PR continua indicada no board e depende
+da conexão GitHub do ambiente.
+
+---
+
+## ✅ Registro de validação interna do MVP — US30
+
+| Campo | Registro |
+|---|---|
+| Participantes | Equipe ACE7 |
+| Data | 18/10/2026 |
+| Formato | Validação interna híbrida: testes HTTP, consultas SQL e inspeção das páginas |
+| Funcionalidades | Dashboard, filtro por período, três CSVs, sete cadastros operacionais e trilha de auditoria |
+| Ambiente | PostgreSQL isolado `adotapet_test` |
+
+### Resultado
+
+- Métricas de adoções, visitas e doações conferidas contra consultas diretas.
+- Filtro válido, período invertido e exportações de adoções, doações e financeiro cobertos.
+- Registro veterinário, vacinação, estoque, lar temporário, acolhimento, turno e despesa executados e conferidos nas listagens.
+- Auditoria conferida com responsável, data, entidade e valores da alteração.
+- Agendamento de visita e transição de status incluídos na trilha administrativa.
+- Roteiro detalhado: [`docs/US30_VALIDATION.md`](US30_VALIDATION.md).
+- Registro de problemas e severidades: [`docs/US30_ISSUES.md`](US30_ISSUES.md).
+
+### Problemas e decisões
+
+Foram encontrados quatro problemas: período antigo ausente no CSV financeiro
+(Média), detalhes da alteração invisíveis na Auditoria (Alta), visitas sem
+trilha de auditoria (Alta) e custo veterinário decimal recusado (Média).
+Os quatro foram corrigidos e cobertos por integração.
+Decisão de saída: MVP liberado para a próxima etapa, sem issue Crítica ou Alta aberta.
+
+---
+
 ## 📌 User Stories Implementadas
 
 | US   | Título                         | Prioridade | Status         |

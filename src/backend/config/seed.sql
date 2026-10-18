@@ -135,6 +135,36 @@ CREATE TABLE IF NOT EXISTS volunteers (
   created_at     TIMESTAMP    DEFAULT NOW()
 );
 
+-- Vinculo seguro dos historicos ao adotante cadastrado (US26).
+-- O backfill preserva registros anteriores, que eram relacionados apenas por e-mail.
+ALTER TABLE adoptions
+  ADD COLUMN IF NOT EXISTS adopter_id INTEGER REFERENCES adopters(id) ON DELETE SET NULL;
+ALTER TABLE donations
+  ADD COLUMN IF NOT EXISTS adopter_id INTEGER REFERENCES adopters(id) ON DELETE SET NULL;
+ALTER TABLE volunteers
+  ADD COLUMN IF NOT EXISTS adopter_id INTEGER REFERENCES adopters(id) ON DELETE SET NULL;
+
+UPDATE adoptions a
+SET adopter_id = ad.id
+FROM adopters ad
+WHERE a.adopter_id IS NULL AND LOWER(a.adopter_email) = LOWER(ad.email);
+
+UPDATE donations d
+SET adopter_id = ad.id
+FROM adopters ad
+WHERE d.adopter_id IS NULL
+  AND d.donor_email IS NOT NULL
+  AND LOWER(d.donor_email) = LOWER(ad.email);
+
+UPDATE volunteers v
+SET adopter_id = ad.id
+FROM adopters ad
+WHERE v.adopter_id IS NULL AND LOWER(v.email) = LOWER(ad.email);
+
+CREATE INDEX IF NOT EXISTS idx_adoptions_adopter_id ON adoptions(adopter_id);
+CREATE INDEX IF NOT EXISTS idx_donations_adopter_id ON donations(adopter_id);
+CREATE INDEX IF NOT EXISTS idx_volunteers_adopter_id ON volunteers(adopter_id);
+
 -- Tabela de agendamentos de visita (US15)
 CREATE TABLE IF NOT EXISTS visits (
   id             SERIAL PRIMARY KEY,

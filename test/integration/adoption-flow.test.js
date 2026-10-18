@@ -163,6 +163,28 @@ describe('adoption flow', { skip }, () => {
     assert.deepEqual(logs[0].metadata, { oldStatus: 'pending', newStatus: 'under_review' });
   });
 
+  test('does not record a false transition when the adoption status is unchanged', async () => {
+    const petId = await insertPet();
+    const adoptionId = await insertAdoption(petId);
+
+    await adminAgent
+      .post(`/admin/adoptions/${adoptionId}/status`)
+      .type('form')
+      .send({ status: 'pending' })
+      .expect(302);
+
+    const history = await rowsOf(
+      'SELECT id FROM adoption_status_history WHERE adoption_id = $1',
+      [adoptionId],
+    );
+    const audit = await rowsOf(
+      "SELECT id FROM audit_logs WHERE action = 'adoption_status_changed' AND entity_id = $1",
+      [adoptionId],
+    );
+    assert.equal(history.length, 0);
+    assert.equal(audit.length, 0);
+  });
+
   test('confirming the delivery completes the adoption and marks the pet adopted', async () => {
     const petId = await insertPet();
     const adoptionId = await insertAdoption(petId);

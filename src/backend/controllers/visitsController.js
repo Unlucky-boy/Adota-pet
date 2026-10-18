@@ -87,33 +87,50 @@ const visitsController = {
     }
 
     try {
-      // A visita só pode acompanhar uma adoção ainda em análise ou aprovada.
-      const adoptionCheck = await db.query(
-        `SELECT a.id
-         FROM adoptions a
-         JOIN pets p ON p.id = a.pet_id
-         WHERE a.id = $1
-           AND a.status IN ('pending', 'approved')
-           AND p.status IN ('available', 'reserved')`,
-        [adoption_id]
-      );
-      if (adoptionCheck.rows.length === 0) {
+      const result = await db.transaction(async (client) => {
+        // A visita só pode acompanhar uma adoção ainda em análise ou aprovada.
+        const adoptionCheck = await client.query(
+          `SELECT a.id
+           FROM adoptions a
+           JOIN pets p ON p.id = a.pet_id
+           WHERE a.id = $1
+             AND a.status IN ('pending', 'approved')
+             AND p.status IN ('available', 'reserved')
+           FOR UPDATE OF a`,
+          [adoption_id]
+        );
+        if (adoptionCheck.rows.length === 0) return { notEligible: true };
+
+        const visitResult = await client.query(
+          `INSERT INTO visits (adoption_id, visit_date, visit_time, visit_type, notes, scheduled_by)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING id`,
+          [
+            adoption_id,
+            visit_date,
+            visit_time,
+            visit_type || 'home_visit',
+            notes ? notes.trim() : null,
+            req.session.user.id,
+          ]
+        );
+        await client.query(
+          `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, metadata)
+           VALUES ($1, 'visit_created', 'visit', $2, $3::jsonb)`,
+          [req.session.user.id, visitResult.rows[0].id, JSON.stringify({
+            adoptionId: adoption_id,
+            visitDate: visit_date,
+            visitTime: visit_time,
+            visitType: visit_type || 'home_visit',
+          })]
+        );
+        return { created: true };
+      });
+
+      if (result.notEligible) {
         req.session.error = 'A solicitação não está apta para agendar uma visita.';
         return res.redirect('/admin/visits/new');
       }
-
-      await db.query(
-        `INSERT INTO visits (adoption_id, visit_date, visit_time, visit_type, notes, scheduled_by)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          adoption_id,
-          visit_date,
-          visit_time,
-          visit_type || 'home_visit',
-          notes ? notes.trim() : null,
-          req.session.user.id,
-        ]
-      );
 
       delete req.session.formData;
       req.session.success = 'Visita agendada com sucesso!';
@@ -136,10 +153,31 @@ const visitsController = {
     }
 
     try {
-      await db.query(
-        'UPDATE visits SET status = $1 WHERE id = $2',
-        [status, req.params.id]
-      );
+      const result = await db.transaction(async (client) => {
+        const currentResult = await client.query(
+          'SELECT id, adoption_id, status FROM visits WHERE id = $1 FOR UPDATE',
+          [req.params.id]
+        );
+        if (currentResult.rows.length === 0) return { notFound: true };
+
+        const current = currentResult.rows[0];
+        await client.query('UPDATE visits SET status = $1 WHERE id = $2', [status, req.params.id]);
+        await client.query(
+          `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, metadata)
+           VALUES ($1, 'visit_status_changed', 'visit', $2, $3::jsonb)`,
+          [req.session.user.id, req.params.id, JSON.stringify({
+            adoptionId: current.adoption_id,
+            oldStatus: current.status,
+            newStatus: status,
+          })]
+        );
+        return { updated: true };
+      });
+
+      if (result.notFound) {
+        req.session.error = 'Visita não encontrada.';
+        return res.redirect('/admin/visits');
+      }
 
       const statusLabel = {
         scheduled: 'reagendada',

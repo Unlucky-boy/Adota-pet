@@ -202,7 +202,7 @@ para dirigir o Express por HTTP.
 
 | Comando | O que faz |
 |---------|-----------|
-| `npm test` | Suíte completa. Sem o banco de teste no ar, a integração é pulada com uma mensagem explicando como subi-lo |
+| `npm test` | Suíte completa. Inicia o banco de teste automaticamente, executa testes unitários, integrados e funcionais e remove o contêiner ao final; exige Docker em execução |
 | `npm run test:unit` | Só os unitários — não precisa de Docker |
 | `npm run test:integration` | Só a integração — exige `npm run db:test:up` antes |
 | `npm run test:watch` | Unitários em modo watch |
