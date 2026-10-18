@@ -1,6 +1,18 @@
 const { spawnSync } = require('node:child_process');
+const { readdirSync } = require('node:fs');
+const path = require('node:path');
 
 const projectDirectory = process.cwd();
+
+function findTestFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => {
+      const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) return findTestFiles(entryPath);
+      return entry.isFile() && entry.name.endsWith('.test.js') ? [entryPath] : [];
+    })
+    .sort();
+}
 
 function run(command, args) {
   return spawnSync(command, args, {
@@ -36,12 +48,15 @@ if (databaseStartCode !== 0) {
 let testCode = 1;
 try {
   console.log('\n[tests] Executando testes unitários, integrados e funcionais...');
+  const testFiles = [
+    ...findTestFiles(path.join(projectDirectory, 'test', 'unit')),
+    ...findTestFiles(path.join(projectDirectory, 'test', 'integration')),
+  ];
   const tests = run(process.execPath, [
     '--env-file=.env.test',
     '--test',
     '--test-concurrency=1',
-    'test/unit/*.test.js',
-    'test/integration/*.test.js',
+    ...testFiles,
   ]);
   testCode = exitCodeOf(tests);
 } finally {
