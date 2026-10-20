@@ -236,7 +236,7 @@ const adoptionsController = {
 
   async details(req, res) {
     try {
-      const [adoptionResult, historyResult, checklistResult] = await Promise.all([
+      const [adoptionResult, historyResult, checklistResult, visitsResult] = await Promise.all([
         db.query(
           `SELECT a.*, p.name AS pet_name, p.species AS pet_species
            FROM adoptions a JOIN pets p ON p.id = a.pet_id WHERE a.id = $1`,
@@ -253,6 +253,14 @@ const adoptionsController = {
           'SELECT * FROM adoption_checklists WHERE adoption_id = $1 ORDER BY item_key',
           [req.params.id]
         ),
+        db.query(
+          `SELECT v.*, u.name AS scheduled_by_name
+           FROM visits v
+           LEFT JOIN users u ON u.id = v.scheduled_by
+           WHERE v.adoption_id = $1
+           ORDER BY v.visit_date DESC, v.visit_time DESC, v.id DESC`,
+          [req.params.id]
+        ),
       ]);
 
       if (adoptionResult.rows.length === 0) {
@@ -264,6 +272,7 @@ const adoptionsController = {
         adoption: adoptionResult.rows[0],
         history: historyResult.rows,
         checklist: checklistResult.rows,
+        visits: visitsResult.rows,
       });
     } catch (err) {
       console.error('Erro ao carregar detalhes da adoção:', err);

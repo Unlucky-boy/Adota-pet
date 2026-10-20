@@ -571,6 +571,7 @@ describe('adoptions controller', () => {
         { rows: [{ id: 12, pet_name: 'Thor' }] },
         { rows: [{ id: 1, new_status: 'pending' }] },
         { rows: [{ item_key: 'documents', completed: true }] },
+        { rows: [{ id: 3, status: 'completed' }, { id: 2, status: 'scheduled' }] },
       );
       const req = createRequest({ params: { id: '12' }, session: { user: { id: 1 } } });
       const res = createResponse();
@@ -581,6 +582,13 @@ describe('adoptions controller', () => {
       assert.deepEqual(res.rendered.data.adoption, { id: 12, pet_name: 'Thor' });
       assert.deepEqual(res.rendered.data.history, [{ id: 1, new_status: 'pending' }]);
       assert.deepEqual(res.rendered.data.checklist, [{ item_key: 'documents', completed: true }]);
+      assert.deepEqual(res.rendered.data.visits, [
+        { id: 3, status: 'completed' },
+        { id: 2, status: 'scheduled' },
+      ]);
+      const [visitsQuery] = stub.matching('FROM visits v');
+      assert.match(visitsQuery.text, /ORDER BY v\.visit_date DESC, v\.visit_time DESC, v\.id DESC/);
+      assert.deepEqual(visitsQuery.params, ['12']);
     });
 
     test('renders the not found page for an unknown adoption', async () => {

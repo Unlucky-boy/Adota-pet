@@ -50,6 +50,26 @@
         </tbody></table></div>
       <% } %>
     </article>
+
+    <article class="panel-card panel-card--spaced">
+      <h2>Histórico de visitas</h2>
+      <% if (visits.length === 0) { %><p class="analytics-empty">Nenhuma visita registrada para esta adoção.</p><% } else { %>
+        <% const visitTypeLabels = { home_visit: 'Visita domiciliar', interview: 'Entrevista' }; %>
+        <% const visitStatusLabels = { scheduled: 'Agendada', completed: 'Concluída', cancelled: 'Cancelada' }; %>
+        <% const visitStatusClasses = { scheduled: 'pending', completed: 'approved', cancelled: 'rejected' }; %>
+        <div class="table-container"><table class="table"><thead><tr><th scope="col">Data / hora</th><th scope="col">Tipo</th><th scope="col">Status</th><th scope="col">Responsável</th><th scope="col">Observação</th></tr></thead><tbody>
+          <% visits.forEach(function(visit) { %>
+            <tr>
+              <td><strong><%= new Date(visit.visit_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) %></strong><br><small><%= visit.visit_time.substring(0, 5) %></small></td>
+              <td><%= visitTypeLabels[visit.visit_type] || visit.visit_type %></td>
+              <td><span class="status-badge status-badge--<%= visitStatusClasses[visit.status] || visit.status %>"><%= visitStatusLabels[visit.status] || visit.status %></span></td>
+              <td><%= visit.scheduled_by_name || '—' %></td>
+              <td><%= visit.notes || '—' %></td>
+            </tr>
+          <% }); %>
+        </tbody></table></div>
+      <% } %>
+    </article>
   </div>
 </section>
 

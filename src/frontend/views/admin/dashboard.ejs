@@ -11,9 +11,9 @@
       <% const currentPeriod = period || { startDate: '', endDate: '', invalid: false }; %>
       <% const reportQuery = `?start_date=${encodeURIComponent(currentPeriod.startDate)}&end_date=${encodeURIComponent(currentPeriod.endDate)}`; %>
       <div class="analytics-hero__actions">
-        <a href="/admin/reports/adoptions.csv<%= reportQuery %>" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Exportar adoções</a>
-        <a href="/admin/reports/donations.csv<%= reportQuery %>" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Exportar doações</a>
-        <a href="/admin/reports/financial.csv<%= reportQuery %>" class="btn btn--outline"><i data-lucide="download" aria-hidden="true"></i> Relatório financeiro</a>
+        <a href="/admin/reports/adoptions.csv<%= reportQuery %>" class="btn btn--outline" data-export-report><i data-lucide="download" aria-hidden="true"></i> Exportar adoções</a>
+        <a href="/admin/reports/donations.csv<%= reportQuery %>" class="btn btn--outline" data-export-report><i data-lucide="download" aria-hidden="true"></i> Exportar doações</a>
+        <a href="/admin/reports/financial.csv<%= reportQuery %>" class="btn btn--outline" data-export-report><i data-lucide="download" aria-hidden="true"></i> Relatório financeiro</a>
         <a href="/admin/adoptions" class="btn btn--primary">Ver solicitações <i data-lucide="arrow-up-right" aria-hidden="true"></i></a>
       </div>
     </header>
@@ -118,5 +118,80 @@
     </div>
   </div>
 </section>
+
+<script>
+  (function() {
+    var exportLinks = document.querySelectorAll('[data-export-report]');
+    var toast;
+    var toastTimeout;
+
+    function showToast(message, isSuccess) {
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.className = 'alert export-toast';
+        document.body.appendChild(toast);
+      }
+
+      window.clearTimeout(toastTimeout);
+      toast.classList.toggle('alert--success', isSuccess);
+      toast.classList.toggle('alert--error', !isSuccess);
+      toast.setAttribute('role', isSuccess ? 'status' : 'alert');
+      toast.setAttribute('aria-live', isSuccess ? 'polite' : 'assertive');
+      toast.replaceChildren(document.createTextNode(message));
+
+      var closeButton = document.createElement('button');
+      closeButton.type = 'button';
+      closeButton.className = 'alert__close';
+      closeButton.setAttribute('aria-label', 'Fechar aviso');
+      closeButton.textContent = '×';
+      closeButton.addEventListener('click', function() {
+        window.clearTimeout(toastTimeout);
+        toast.remove();
+        toast = null;
+      });
+      toast.appendChild(closeButton);
+
+      toastTimeout = window.setTimeout(function() {
+        toast.remove();
+        toast = null;
+      }, 5000);
+    }
+
+    exportLinks.forEach(function(link) {
+      link.addEventListener('click', async function(event) {
+        event.preventDefault();
+        if (link.dataset.exporting === 'true') return;
+
+        link.dataset.exporting = 'true';
+        link.setAttribute('aria-busy', 'true');
+        try {
+          var response = await fetch(link.href, { headers: { Accept: 'text/csv' } });
+          var contentType = (response.headers.get('content-type') || '').toLowerCase();
+          if (!response.ok || !contentType.includes('text/csv')) {
+            throw new Error('A resposta não contém um relatório CSV válido.');
+          }
+
+          var blobUrl = URL.createObjectURL(await response.blob());
+          var downloadLink = document.createElement('a');
+          var contentDisposition = response.headers.get('content-disposition') || '';
+          var filename = contentDisposition.match(/filename="([^"]+)"/i);
+          downloadLink.href = blobUrl;
+          downloadLink.download = filename ? filename[1] : 'relatorio.csv';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          downloadLink.remove();
+          window.setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 1000);
+          showToast('Relatório exportado com sucesso.', true);
+        } catch (error) {
+          console.error('Erro ao exportar relatório CSV:', error);
+          showToast('Não foi possível exportar o relatório. Tente novamente.', false);
+        } finally {
+          delete link.dataset.exporting;
+          link.removeAttribute('aria-busy');
+        }
+      });
+    });
+  })();
+</script>
 
 <%- include('../layout-footer') %>

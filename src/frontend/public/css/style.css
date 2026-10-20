@@ -423,6 +423,17 @@ h1, h2, h3 {
   color: #721c24;
 }
 
+.export-toast {
+  position: fixed;
+  top: var(--space-6);
+  right: var(--space-6);
+  z-index: 1100;
+  max-width: min(28rem, calc(100vw - 2rem));
+  margin: 0;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+}
+
 .alert__close {
   margin-left: auto;
   background: none;
@@ -2051,6 +2062,7 @@ h1, h2, h3 {
   .analytics-period-filter > div, .analytics-period-filter label, .analytics-period-filter .btn { width: 100%; }
   .analytics-grid { grid-template-columns: 1fr; }
   .analytics-panel--recent, .analytics-panel--operations { grid-column: auto; }
+  .export-toast { top: var(--space-3); right: var(--space-3); }
 }
 
 @media (prefers-reduced-motion: reduce) {
